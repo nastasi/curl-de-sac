@@ -1,0 +1,65 @@
+<?php
+/*
+ *  curl-de-sac - curl-de-sac.phh
+ *
+ *  Copyright (C)      2014 Matteo Nastasi
+ *                          mailto: nastasi@alternativeoutput.it
+ *                                  matteo.nastasi@gmail.com
+ *                          web: http://www.alternativeoutput.it
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABLILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details. You should have received a
+ * copy of the GNU General Public License along with this program; if
+ * not, write to the Free Software Foundation, Inc, 59 Temple Place -
+ * Suite 330, Boston, MA 02111-1307, USA.
+ *
+ */
+
+$G_curl_de_sac_version = "0.1";
+
+class CDS_cmd_cls {
+    var $name;
+    var $tout;
+    
+    function CDS_cmd_cls($name, $tout)
+    {
+        $this->name = $name;
+        $this->tout = $tout;
+    }
+
+    function cb()
+    {
+        print "THIS MUST BE IMPLEMENTED";
+        exit(123);
+    }
+}
+
+class Curl_de_sac {
+    var $mh;
+    var $cmd_cls;
+
+    function Curl_de_sac() {
+        $this->mh = curl_multi_init();
+        $this->cmd_cls = array();
+    }
+
+    function cmd_register($cmd_cls)
+    {
+        if (get_class($cmd_cls) != 'CDS_cmd_cls' || is_subclass_of($cmd_cls, 'CDS_cmd_cls') == FALSE)
+            return FALSE;
+
+        if (isset($this->cmd_cls[$cmd_cls->name]))
+            return FALSE;
+
+        $this->cmd[$cmd_cls->name] = $cmd_cls;
+
+        return TRUE;
+    }
+}
