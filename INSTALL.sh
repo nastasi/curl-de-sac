@@ -46,7 +46,7 @@ function usage () {
     # echo "  -C config filename              - def. \"$brisk_conf\""
     # echo "  -U unix socket path             - def. \"$usock_path\""
     # echo "  -u system user to run brisk dae - def. \"$sys_user\""
-    # echo "  -x copy tests as normal php     - def. \"$test_add\""
+    echo "  -x copy tests as normal php     - def. \"$test_add\""
     echo
 }
 
@@ -154,7 +154,7 @@ while [ $# -gt 0 ]; do
 #        -U*) usock_path="$(get_param "-U" "$1" "$2")"; sh=$?;;
 #        -u*) sys_user="$(get_param "-u" "$1" "$2")"; sh=$?;;
 #        system) action=system;;
-        -W) web_only="TRUE";;
+#        -W) web_only="TRUE";;
         -x) test_add="TRUE";;
         -h) usage $0; exit 0;;
 	*) usage $0; exit 1;;
@@ -263,7 +263,7 @@ if [ "$web_only" != "TRUE" ]; then
    :
 fi
 install -d ${web_path}
-for i in $(find web -type d | sed 's/^....//g'); do
+for i in $(find web -type d | grep '/' | sed 's/^....//g'); do
     install -d ${web_path}/$i 
 done
 
