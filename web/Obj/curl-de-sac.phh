@@ -27,7 +27,7 @@ $G_curl_de_sac_version = "0.1";
 class CDS_cmd_cls {
     var $name;
     var $tout;
-    
+
     function CDS_cmd_cls($name, $tout)
     {
         $this->name = $name;
@@ -52,13 +52,13 @@ class Curl_de_sac {
 
     function cmd_register($cmd_cls)
     {
-        if (get_class($cmd_cls) != 'CDS_cmd_cls' || is_subclass_of($cmd_cls, 'CDS_cmd_cls') == FALSE)
+        if (get_class($cmd_cls) != 'CDS_cmd_cls' && is_subclass_of($cmd_cls, 'CDS_cmd_cls') == FALSE)
             return FALSE;
 
         if (isset($this->cmd_cls[$cmd_cls->name]))
             return FALSE;
 
-        $this->cmd[$cmd_cls->name] = $cmd_cls;
+        $this->cmd_cls[$cmd_cls->name] = $cmd_cls;
 
         return TRUE;
     }

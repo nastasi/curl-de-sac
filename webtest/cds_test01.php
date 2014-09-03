@@ -1,7 +1,9 @@
+#!/usr/bin/php
+<?php
 require_once('Obj/curl-de-sac.phh');
 
 class short_cmd_cls extends CDS_cmd_cls {
-    function short_cmd_cls() 
+    function short_cmd_cls()
     {
         parent::__construct("short", 10);
     }
@@ -13,7 +15,7 @@ class short_cmd_cls extends CDS_cmd_cls {
 }
 
 class long_cmd_cls extends CDS_cmd_cls {
-    function long_cmd_cls() 
+    function long_cmd_cls()
     {
         parent::__construct("long", 15);
     }
@@ -52,6 +54,9 @@ function main()
         fprintf(STDERR, "cmd_cls2 re-registration success\n");
         exit(3);
     }
+
+    print_r($cds);
+    printf("SUCCESS\n");
 
     // start loop
     //   print status
