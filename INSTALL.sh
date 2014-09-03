@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x
+#set -x
 #
 # Defaults
 #
@@ -271,8 +271,11 @@ for i in $(find web -name '.htaccess' -o -name '*.php' -o -name '*.phh' -o -name
     install -m 644 "web/$i" "${web_path}/$i"
 done
 if [ "$test_add" = "TRUE" ]; then
-    for i in $(find webtest -name '.htaccess' -o -name '*.php' -o -name '*.phh' -o -name '*.pho' -o -name '*.css' -o -name '*.js' -o -name '*.mp3' -o -name '*.swf' -o -name 'terms-of-service*' | sed 's/^........//g'); do
+    for i in $(find webtest -name '.htaccess' -o -name '*.phh' -o -name '*.pho' -o -name '*.css' -o -name '*.js' -o -name '*.mp3' -o -name '*.swf' -o -name 'terms-of-service*' | sed 's/^........//g'); do
         install -m 644 "webtest/$i" "${web_path}/$i"
+    done
+    for i in $(find webtest -name '*.php' | sed 's/^........//g'); do
+        install -m 755 "webtest/$i" "${web_path}/$i"
     done
 fi
 
