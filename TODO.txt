@@ -1,0 +1,3 @@
+- timeout handling
+- remove cmd from list when accomplished
+DONE - debugging system

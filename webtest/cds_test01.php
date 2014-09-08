@@ -23,8 +23,10 @@ class short_cmd_cls extends CDS_cmd_cls {
 
     function create($cds, $url)
     {
-        printf("short::create url:[%s]\n", $url);
-        
+        if ($cds->dbg_get() > 0) {
+            printf("short::create url:[%s]\n", $url);
+        }
+
         do {
             if (($ch = parent::pre_create($url)) == FALSE)
                 break;
@@ -42,7 +44,9 @@ class short_cmd_cls extends CDS_cmd_cls {
 
     function cb()
     {
-        printf("short_cb:\n");
+        if ($this->dbg_get() > 0) {
+            printf("short_cb:\n");
+        }
     }
 }
 
@@ -64,8 +68,10 @@ class long_cmd_cls extends CDS_cmd_cls {
 
     function create($cds, $url)
     {
-        printf("long::create url:[%s]\n", $url);
-        
+        if ($cds->dbg_get() > 0) {
+            printf("long::create url:[%s]\n", $url);
+        }
+
         do {
             if (($ch = parent::pre_create($url)) == FALSE)
                 break;
@@ -83,7 +89,9 @@ class long_cmd_cls extends CDS_cmd_cls {
 
     function cb()
     {
-        printf("long_cb:\n");
+        if ($this->dbg_get() > 0) {
+            printf("long_cb:\n");
+        }
     }
 }
 
@@ -97,9 +105,9 @@ function main()
     $cmd_cls1 = new short_cmd_cls();
 
     // registrer cds_cmd 1
-    printf("Register CLS1\n");
+    printf("MAIN: Register CLS1\n");
     if (($cds->cmd_cls_register($cmd_cls1)) == FALSE) {
-        fprintf(STDERR, "cmd_cls1 registration failed\n");
+        fprintf(STDERR, "MAIN: cmd_cls1 registration failed\n");
         exit(1);
     }
 
@@ -107,64 +115,67 @@ function main()
     $cmd_cls2 = new long_cmd_cls();
 
     // register cds_cmd 2
-    printf("Register CLS2\n");
+    printf("MAIN: Register CLS2\n");
     if (($cds->cmd_cls_register($cmd_cls2)) == FALSE) {
-        fprintf(STDERR, "cmd_cls2 registration failed\n");
+        fprintf(STDERR, "MAIN: cmd_cls2 registration failed\n");
         exit(2);
     }
 
     // register cds_cmd 2 (retry)
-    printf("Re-register CLS2 (must go wrong)\n");
+    printf("MAIN: Re-register CLS2 (must go wrong)\n");
     if (($cds->cmd_cls_register($cmd_cls2)) != FALSE) {
-        fprintf(STDERR, "cmd_cls2 re-registration success\n");
+        fprintf(STDERR, "MAIN: cmd_cls2 re-registration success\n");
         exit(3);
     }
 
+    printf("MAIN: CDS:\n");
     print_r($cds);
-    printf("Deregister CLS2\n");
+    printf("MAIN: Deregister CLS2\n");
     if (($cds->cmd_cls_deregister($cmd_cls2)) == FALSE) {
-        fprintf(STDERR, "cmd_cls2 deregistration failed\n");
+        fprintf(STDERR, "MAIN: cmd_cls2 deregistration failed\n");
         exit(4);
     }
+    printf("MAIN: CDS:\n");
     print_r($cds);
 
     // re-re-register cds_cmd 2
-    printf("Re-re-register CLS2\n");
+    printf("MAIN: Re-re-register CLS2\n");
     if (($cds->cmd_cls_register($cmd_cls2)) == FALSE) {
-        fprintf(STDERR, "cmd_cls2 re-re-registration failed\n");
+        fprintf(STDERR, "MAIN: cmd_cls2 re-re-registration failed\n");
         exit(5);
     }
 
-    printf("Deregister all\n");
+    printf("MAIN: Deregister all\n");
     $cds->cmd_cls_deregister_all();
 
     // registrer cds_cmd 1
-    printf("Register CLS1\n");
+    printf("MAIN: register CLS1\n");
     if (($cds->cmd_cls_register($cmd_cls1)) == FALSE) {
-        fprintf(STDERR, "cmd_cls1 registration failed\n");
+        fprintf(STDERR, "MAIN: cmd_cls1 registration failed\n");
         exit(1);
     }
 
     // register cds_cmd 2
-    printf("Register CLS2\n");
+    printf("MAIN: register CLS2\n");
     if (($cds->cmd_cls_register($cmd_cls2)) == FALSE) {
-        fprintf(STDERR, "cmd_cls2 registration failed\n");
+        fprintf(STDERR, "MAIN: cmd_cls2 registration failed\n");
         exit(2);
     }
+    printf("MAIN: CDS:\n");
     print_r($cds);
-    printf("SUCCESS\n");
+    printf("MAIN: SUCCESS\n");
 
     for ($i = 0 ; $i < 10 ; $i++) {
         if ($i == 2) {
-            print("load short\n");
+            printf("MAIN: load short\n");
             if ($cds->execute("short", WEBURL.'/short.php') == FALSE) {
-                printf("push command failed\n");
+                printf("MAIN: push command failed\n");
                 exit(123);
             }
         }
-        printf("Call process\n");
+        printf("MAIN: Call process\n");
         $cds->process();
-        sleep(1);
+        usleep(500000);
     }
     // start loop
     //   print status

@@ -33,6 +33,14 @@ class CDS_cmd {
         $this->cmd_cls = $cmd_cls;
         $this->ch = $ch;
     }
+
+    function dbg_get()
+    {
+        // NOTE: cmd_cls must be valid by definition
+        if ($this->cmd_cls->cds == NULL)
+            return -1;
+        return $this->cmd_cls->cds->dbg_get();
+    }
 }
 
 class CDS_cmd_cls {
@@ -103,6 +111,11 @@ class Curl_de_sac {
     function dbg_set($dbg)
     {
         $this->dbg = $dbg;
+    }
+
+    function dbg_get()
+    {
+        return($this->dbg);
     }
 
     function cmd_cls_register($cmd_cls)
