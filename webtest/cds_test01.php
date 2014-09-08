@@ -98,7 +98,7 @@ function main()
 
     // registrer cds_cmd 1
     printf("Register CLS1\n");
-    if (($cds->cmd_register($cmd_cls1)) == FALSE) {
+    if (($cds->cmd_cls_register($cmd_cls1)) == FALSE) {
         fprintf(STDERR, "cmd_cls1 registration failed\n");
         exit(1);
     }
@@ -108,21 +108,21 @@ function main()
 
     // register cds_cmd 2
     printf("Register CLS2\n");
-    if (($cds->cmd_register($cmd_cls2)) == FALSE) {
+    if (($cds->cmd_cls_register($cmd_cls2)) == FALSE) {
         fprintf(STDERR, "cmd_cls2 registration failed\n");
         exit(2);
     }
 
     // register cds_cmd 2 (retry)
     printf("Re-register CLS2 (must go wrong)\n");
-    if (($cds->cmd_register($cmd_cls2)) != FALSE) {
+    if (($cds->cmd_cls_register($cmd_cls2)) != FALSE) {
         fprintf(STDERR, "cmd_cls2 re-registration success\n");
         exit(3);
     }
 
     print_r($cds);
     printf("Deregister CLS2\n");
-    if (($cds->cmd_deregister($cmd_cls2)) == FALSE) {
+    if (($cds->cmd_cls_deregister($cmd_cls2)) == FALSE) {
         fprintf(STDERR, "cmd_cls2 deregistration failed\n");
         exit(4);
     }
@@ -130,24 +130,24 @@ function main()
 
     // re-re-register cds_cmd 2
     printf("Re-re-register CLS2\n");
-    if (($cds->cmd_register($cmd_cls2)) == FALSE) {
+    if (($cds->cmd_cls_register($cmd_cls2)) == FALSE) {
         fprintf(STDERR, "cmd_cls2 re-re-registration failed\n");
         exit(5);
     }
 
     printf("Deregister all\n");
-    $cds->cmd_deregister_all();
+    $cds->cmd_cls_deregister_all();
 
     // registrer cds_cmd 1
     printf("Register CLS1\n");
-    if (($cds->cmd_register($cmd_cls1)) == FALSE) {
+    if (($cds->cmd_cls_register($cmd_cls1)) == FALSE) {
         fprintf(STDERR, "cmd_cls1 registration failed\n");
         exit(1);
     }
 
     // register cds_cmd 2
     printf("Register CLS2\n");
-    if (($cds->cmd_register($cmd_cls2)) == FALSE) {
+    if (($cds->cmd_cls_register($cmd_cls2)) == FALSE) {
         fprintf(STDERR, "cmd_cls2 registration failed\n");
         exit(2);
     }

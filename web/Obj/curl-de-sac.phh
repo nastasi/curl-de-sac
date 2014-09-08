@@ -105,7 +105,7 @@ class Curl_de_sac {
         $this->dbg = $dbg;
     }
 
-    function cmd_register($cmd_cls)
+    function cmd_cls_register($cmd_cls)
     {
         if (get_class($cmd_cls) != 'CDS_cmd_cls' && is_subclass_of($cmd_cls, 'CDS_cmd_cls') == FALSE)
             return FALSE;
@@ -119,7 +119,7 @@ class Curl_de_sac {
         return TRUE;
     }
 
-    function cmd_deregister($cmd_cls)
+    function cmd_cls_deregister($cmd_cls)
     {
         if (get_class($cmd_cls) != 'CDS_cmd_cls' && is_subclass_of($cmd_cls, 'CDS_cmd_cls') == FALSE)
             return FALSE;
@@ -132,7 +132,7 @@ class Curl_de_sac {
         return TRUE;
     }
 
-    function cmd_deregister_all()
+    function cmd_cls_deregister_all()
     {
         foreach($this->cmd_cls as $cmd_cls) {
             $cmd_cls->cds_set(NULL);
