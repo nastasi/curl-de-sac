@@ -25,24 +25,31 @@
 $G_curl_de_sac_version = "0.1";
 
 class CDS_cmd {
-    var $ch;
     var $cmd_cls;
+    var $ch;
 
-    function CDS_cmd($ch, $cmd_cls)
+    function CDS_cmd($cmd_cls, $ch)
     {
-        $this->ch = $ch;
         $this->cmd_cls = $cmd_cls;
+        $this->ch = $ch;
     }
 }
 
 class CDS_cmd_cls {
+    var $cds;
     var $name;
     var $tout;
 
     function CDS_cmd_cls($name, $tout)
     {
+        $this->cds = NULL;
         $this->name = $name;
         $this->tout = $tout;
+    }
+
+    function cds_set($cds)
+    {
+        $this->cds = $cds;
     }
 
     static function pre_create($url)
@@ -107,6 +114,7 @@ class Curl_de_sac {
             return FALSE;
 
         $this->cmd_cls[$cmd_cls->name] = $cmd_cls;
+        $cmd_cls->cds_set($this);
 
         return TRUE;
     }
@@ -118,12 +126,18 @@ class Curl_de_sac {
         if (!isset($this->cmd_cls[$cmd_cls->name]))
             return FALSE;
 
+        $this->cmd_cls[$cmd_cls->name]->cds_set(NULL);
+
         unset($this->cmd_cls[$cmd_cls->name]);
         return TRUE;
     }
 
     function cmd_deregister_all()
     {
+        foreach($this->cmd_cls as $cmd_cls) {
+            $cmd_cls->cds_set(NULL);
+        }
+
         $this->cmd_cls = array();
     }
 

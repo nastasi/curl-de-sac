@@ -8,9 +8,9 @@ require_once('Obj/curl-de-sac.phh');
 class short_cmd extends CDS_cmd {
     var $short_data;
 
-    function short_cmd($ch, $cmd_cls, $short_data)
+    function short_cmd($cmd_cls, $ch, $short_data)
     {
-        parent::__construct($ch, $cmd_cls);
+        parent::__construct($cmd_cls, $ch);
         $this->short_data = $short_data;
     }
 }
@@ -49,9 +49,9 @@ class short_cmd_cls extends CDS_cmd_cls {
 class long_cmd extends CDS_cmd {
     var $long_data;
 
-    function long_cmd($ch, $cmd_cls, $long_data)
+    function long_cmd($cmd_cls, $ch, $long_data)
     {
-        parent::__construct($ch, $cmd_cls);
+        parent::__construct($cmd_cls, $ch);
         $this->long_data = $long_data;
     }
 }
