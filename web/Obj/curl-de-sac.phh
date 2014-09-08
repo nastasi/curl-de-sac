@@ -24,6 +24,17 @@
 
 $G_curl_de_sac_version = "0.1";
 
+class CDS_cmd {
+    var $ch;
+    var $cmd_cls;
+
+    function CDS_cmd($ch, $cmd_cls)
+    {
+        $this->ch = $ch;
+        $this->cmd_cls = $cmd_cls;
+    }
+}
+
 class CDS_cmd_cls {
     var $name;
     var $tout;
@@ -34,8 +45,36 @@ class CDS_cmd_cls {
         $this->tout = $tout;
     }
 
-    function cb()
+    static function pre_create($url)
     {
+        if (($ch = curl_init()) == FALSE)
+            return FALSE;
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_HEADER, 0);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        
+        return ($ch);
+    }
+
+    function create($cds, $ch)
+    {
+        if ($cds->dbg > 2) {
+            printf("CDS_cmd_cls::create - begin\n");
+            print_r($ch);
+        }
+        if (($ret = curl_multi_add_handle($cds->mh, $ch)) != 0) {
+            // INFO: $ret is a CURLM_XXX errors code
+            return (FALSE);
+        }
+        if ($cds->dbg > 2) {
+            printf("CDS_cmd_cls::create - end\n");
+        }
+        return (TRUE);
+    }
+
+    function cb($cmd, $ret)
+    {
+        
         print "THIS MUST BE IMPLEMENTED";
         exit(123);
     }
@@ -44,10 +83,19 @@ class CDS_cmd_cls {
 class Curl_de_sac {
     var $mh;
     var $cmd_cls;
+    var $cmd;
+    var $dbg;
 
-    function Curl_de_sac() {
+    function Curl_de_sac($dbg=0) {
         $this->mh = curl_multi_init();
         $this->cmd_cls = array();
+        $this->cmd = array();
+        $this->dbg = $dbg;
+    }
+
+    function dbg_set($dbg)
+    {
+        $this->dbg = $dbg;
     }
 
     function cmd_register($cmd_cls)
@@ -62,4 +110,85 @@ class Curl_de_sac {
 
         return TRUE;
     }
+
+    function cmd_deregister($cmd_cls)
+    {
+        if (get_class($cmd_cls) != 'CDS_cmd_cls' && is_subclass_of($cmd_cls, 'CDS_cmd_cls') == FALSE)
+            return FALSE;
+        if (!isset($this->cmd_cls[$cmd_cls->name]))
+            return FALSE;
+
+        unset($this->cmd_cls[$cmd_cls->name]);
+        return TRUE;
+    }
+
+    function cmd_deregister_all()
+    {
+        $this->cmd_cls = array();
+    }
+
+    function execute()
+    {
+        $args = func_get_args();
+
+        if ($this->dbg > 1) {
+             printf("CDS_cmd_cls::execute  ARGS:\n");
+             print_r($args);
+        }
+        do {
+            if (($name = array_shift($args)) === NULL)
+                break;
+            array_unshift($args, $this);
+            
+            if (!isset($this->cmd_cls[$name]))
+                break;
+            
+            $cmd_cls = $this->cmd_cls[$name];
+            
+            if (($inst = call_user_func_array(array($cmd_cls, "create"), $args)) == FALSE)
+                break;
+
+            array_push($this->cmd, $inst);
+            if ($this->dbg > 1) {
+                printf("CDS_cmd_cls::process - execute  push cmd\n");
+                print_r($this->cmd);
+            }
+            return TRUE;
+        } while (FALSE);
+
+        return FALSE;
+    }
+
+    function process()
+    {
+        if ($this->dbg > 1) {
+             printf("CDS_cmd_cls::process - begin\n");
+        }
+        $running = NULL;
+        $ret = curl_multi_exec($this->mh, $running);
+        $msgs_in_queue = NULL;
+
+        do {
+            if ($ret = curl_multi_info_read ($this->mh, $msgs_in_queue)) {
+                if ($this->dbg > 1)
+                    printf("Info_read miq: %d\n", $msgs_in_queue);
+                
+                foreach($this->cmd as $cmd) {
+                    if ($cmd->ch == $ret['handle']) {
+                        $cmd->cmd_cls->cb($cmd, $ret);
+                        break;
+                    }
+                }
+                $info = curl_getinfo($ret['handle']);
+                if ($this->dbg > 1) {
+                    printf("Getinfo:\n");
+                    print_r($info);
+                }
+            }
+        } while ($msgs_in_queue > 0);
+        if ($this->dbg > 1) {
+            printf("CDS_cmd_cls::process - end (queue: %d)\n", $msgs_in_queue);
+        }
+    }
+
 }
