@@ -27,11 +27,18 @@ $G_curl_de_sac_version = "0.1";
 class CDS_cmd {
     var $cmd_cls;
     var $ch;
+    var $tlimit;
 
     function CDS_cmd($cmd_cls, $ch)
     {
         $this->cmd_cls = $cmd_cls;
         $this->ch = $ch;
+        $this->tlimit = time() + $cmd_cls->tout;
+    }
+
+    function ch_get()
+    {
+        return ($this->ch);
     }
 
     function dbg_get()
@@ -60,14 +67,16 @@ class CDS_cmd_cls {
         $this->cds = $cds;
     }
 
-    static function pre_create($url)
+    static function pre_create($cds, $url)
     {
+        if ($cds->dbg_get() > 2) { printf("CURL: curl_init\n"); }
         if (($ch = curl_init()) == FALSE)
             return FALSE;
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_HEADER, 0);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        
+        curl_setopt($ch, CURLOPT_FORBID_REUSE, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Connection: close'));
         return ($ch);
     }
 
@@ -75,23 +84,32 @@ class CDS_cmd_cls {
     {
         if ($cds->dbg > 2) {
             printf("CDS_cmd_cls::create - begin\n");
-            print_r($ch);
+            printf("CURL: curl_multi_add_handle\n");
         }
         if (($ret = curl_multi_add_handle($cds->mh, $ch)) != 0) {
             // INFO: $ret is a CURLM_XXX errors code
             return (FALSE);
         }
-        if ($cds->dbg > 2) {
-            printf("CDS_cmd_cls::create - end\n");
-        }
+        if ($cds->dbg > 2) { printf("CDS_cmd_cls::create - end\n"); }
         return (TRUE);
     }
 
-    function cb($cmd, $ret)
+    function process($cmd, $ret)
     {
         
-        print "THIS MUST BE IMPLEMENTED";
+        fprintf(STDERR, "process MUST BE IMPLEMENTED");
         exit(123);
+    }
+
+    function timeout($cmd)
+    {
+        fprintf(STDERR, "timeout MUST BE IMPLEMENTED");
+        exit(123);
+    }
+
+    function dbg_get()
+    {
+        return $this->cds->dbg;
     }
 }
 
@@ -102,6 +120,7 @@ class Curl_de_sac {
     var $dbg;
 
     function Curl_de_sac($dbg=0) {
+        if ($dbg > 2) { printf("CURL: curl_multi_init\n"); }
         $this->mh = curl_multi_init();
         $this->cmd_cls = array();
         $this->cmd = array();
@@ -154,6 +173,26 @@ class Curl_de_sac {
         $this->cmd_cls = array();
     }
 
+
+    function cleanup($key)
+    {
+        $cmd = $this->cmd[$key];
+
+        if ($this->dbg > 2) {
+            printf("cleanup\n");
+            printf("CURL: curl_multi_remove_handle:\n");
+            print_r($cmd->ch_get());
+            printf("\n");
+        }
+        // return 0 on SUCCESS or CURLM_XXX in other cases
+        if (($ret = curl_multi_remove_handle($this->mh, $cmd->ch_get())) != 0) {
+            fprintf(STDERR, "CURL: curl_multi_remove_handle FAILED (%d)\n", $ret);
+        }
+        if ($this->dbg > 2) { printf("CURL: curl_close\n"); }
+        curl_close($cmd->ch_get());
+        unset($this->cmd[$key]);
+    }
+
     function execute()
     {
         $args = func_get_args();
@@ -176,46 +215,59 @@ class Curl_de_sac {
                 break;
 
             array_push($this->cmd, $inst);
-            if ($this->dbg > 1) {
-                printf("CDS_cmd_cls::process - execute  push cmd\n");
-                print_r($this->cmd);
-            }
+            if ($this->dbg > 1) { printf("CDS_cmd_cls::process - execute  push cmd\n"); }
+            if (($this->dbg & 1) == 1) { print_r($this); }
+
             return TRUE;
         } while (FALSE);
 
         return FALSE;
     }
 
-    function process()
+    function process($curtime=0)
     {
-        if ($this->dbg > 1) {
-             printf("CDS_cmd_cls::process - begin\n");
+        if ($curtime  == 0) {
+            $curtime = time();
         }
+        if ($this->dbg > 1) { printf("CDS_cmd_cls::process - begin\n"); }
         $running = NULL;
+
+        if ($this->dbg > 2) { printf("CURL: curl_multi_exec\n"); }
         $ret = curl_multi_exec($this->mh, $running);
         $msgs_in_queue = NULL;
 
         do {
+            if ($this->dbg > 2) { printf("CURL: curl_multi_info_read\n"); }
+
             if ($ret = curl_multi_info_read ($this->mh, $msgs_in_queue)) {
-                if ($this->dbg > 1)
-                    printf("Info_read miq: %d\n", $msgs_in_queue);
-                
-                foreach($this->cmd as $cmd) {
-                    if ($cmd->ch == $ret['handle']) {
-                        $cmd->cmd_cls->cb($cmd, $ret);
-                        break;
-                    }
-                }
+                if ($this->dbg > 1) { printf("Info_read miq: %d\n", $msgs_in_queue); }
+                if ($this->dbg > 2) { printf("CURL: curl_getinfo\n"); }
+
                 $info = curl_getinfo($ret['handle']);
                 if ($this->dbg > 1) {
                     printf("Getinfo:\n");
                     print_r($info);
                 }
+
+                foreach($this->cmd as $key => $cmd) {
+                    if ($cmd->ch == $ret['handle']) {
+                        if ($cmd->cmd_cls->process($cmd, $ret) == TRUE) {
+                            $this->cleanup($key);
+                        }
+                        break;
+                    }
+                }
             }
         } while ($msgs_in_queue > 0);
-        if ($this->dbg > 1) {
-            printf("CDS_cmd_cls::process - end (queue: %d)\n", $msgs_in_queue);
+        foreach ($this->cmd as $key => $cmd) {
+            if ($this->dbg > 2) { printf("Check tout, curr: %d tlimit %d\n", $curtime, $cmd->tlimit); }
+            if ($curtime > $cmd->tlimit) {
+                if ($this->dbg > 2) { printf("TIMEOUT REACHED!\n"); }
+                $cmd->cmd_cls->timeout($cmd);
+                $this->cleanup($key);
+            }
         }
+        if ($this->dbg > 1) { printf("CDS_cmd_cls::process - end (queue: %d)\n", $msgs_in_queue); }
     }
 
 }

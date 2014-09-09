@@ -28,13 +28,13 @@ class short_cmd_cls extends CDS_cmd_cls {
         }
 
         do {
-            if (($ch = parent::pre_create($url)) == FALSE)
+            if (($ch = parent::pre_create($cds, $url)) == FALSE)
                 break;
 
             if (parent::create($cds, $ch) == FALSE)
                 break;
 
-            $cmd = new short_cmd($ch, $this, "none currently");
+            $cmd = new short_cmd($this, $ch, "none currently");
 
             return $cmd;
         } while (FALSE);
@@ -42,11 +42,19 @@ class short_cmd_cls extends CDS_cmd_cls {
         return FALSE;
     }
 
-    function cb()
+    function process($cmd, $ret)
     {
+        printf("CURL: curl_multi_getcontent\n");
+        $content = curl_multi_getcontent($cmd->ch_get());
         if ($this->dbg_get() > 0) {
-            printf("short_cb:\n");
+            printf("short process: [%s]\n", $content);
         }
+        return TRUE;
+    }
+
+    function timeout($cmd)
+    {
+        printf("Short timeout function reached\n");
     }
 }
 
@@ -63,7 +71,7 @@ class long_cmd extends CDS_cmd {
 class long_cmd_cls extends CDS_cmd_cls {
     function long_cmd_cls()
     {
-        parent::__construct("long", 10);
+        parent::__construct("long", 5);
     }
 
     function create($cds, $url)
@@ -73,13 +81,13 @@ class long_cmd_cls extends CDS_cmd_cls {
         }
 
         do {
-            if (($ch = parent::pre_create($url)) == FALSE)
+            if (($ch = parent::pre_create($cds, $url)) == FALSE)
                 break;
 
             if (parent::create($cds, $ch) == FALSE)
                 break;
 
-            $cmd = new long_cmd($ch, $this, "none currently");
+            $cmd = new long_cmd($this, $ch, "none currently");
 
             return $cmd;
         } while (FALSE);
@@ -87,60 +95,74 @@ class long_cmd_cls extends CDS_cmd_cls {
         return FALSE;
     }
 
-    function cb()
+    function process($cmd, $ret)
     {
+        printf("CURL: curl_multi_getcontent\n");
+        $content = curl_multi_getcontent($cmd->ch_get());
         if ($this->dbg_get() > 0) {
-            printf("long_cb:\n");
+            printf("long process: [%s]\n", $content);
         }
+
+        return TRUE;
+    }
+
+    function timeout($cmd)
+    {
+        printf("Long timeout function reached\n");
     }
 }
 
 
 function main()
 {
+    $debug = 998;
     // create cds
-    $cds = new Curl_de_sac(999);
+    $cds = new Curl_de_sac($debug);
 
     // create cds_cmd 1
-    $cmd_cls1 = new short_cmd_cls();
+    $short_cls = new short_cmd_cls();
 
     // registrer cds_cmd 1
     printf("MAIN: Register CLS1\n");
-    if (($cds->cmd_cls_register($cmd_cls1)) == FALSE) {
+    if (($cds->cmd_cls_register($short_cls)) == FALSE) {
         fprintf(STDERR, "MAIN: cmd_cls1 registration failed\n");
         exit(1);
     }
 
     // create cds_cmd 2
-    $cmd_cls2 = new long_cmd_cls();
+    $long_cls = new long_cmd_cls();
 
     // register cds_cmd 2
     printf("MAIN: Register CLS2\n");
-    if (($cds->cmd_cls_register($cmd_cls2)) == FALSE) {
+    if (($cds->cmd_cls_register($long_cls)) == FALSE) {
         fprintf(STDERR, "MAIN: cmd_cls2 registration failed\n");
         exit(2);
     }
 
     // register cds_cmd 2 (retry)
     printf("MAIN: Re-register CLS2 (must go wrong)\n");
-    if (($cds->cmd_cls_register($cmd_cls2)) != FALSE) {
+    if (($cds->cmd_cls_register($long_cls)) != FALSE) {
         fprintf(STDERR, "MAIN: cmd_cls2 re-registration success\n");
         exit(3);
     }
 
     printf("MAIN: CDS:\n");
-    print_r($cds);
+    if (($debug & 1) == 1)
+        print_r($cds);
     printf("MAIN: Deregister CLS2\n");
-    if (($cds->cmd_cls_deregister($cmd_cls2)) == FALSE) {
+    if (($cds->cmd_cls_deregister($long_cls)) == FALSE) {
         fprintf(STDERR, "MAIN: cmd_cls2 deregistration failed\n");
         exit(4);
     }
-    printf("MAIN: CDS:\n");
-    print_r($cds);
-
+    printf("MAIN:");
+    if (($debug & 1) == 1) {
+        printf(" CDS:\n");
+        print_r($cds);
+    }
+    printf("\n");
     // re-re-register cds_cmd 2
     printf("MAIN: Re-re-register CLS2\n");
-    if (($cds->cmd_cls_register($cmd_cls2)) == FALSE) {
+    if (($cds->cmd_cls_register($long_cls)) == FALSE) {
         fprintf(STDERR, "MAIN: cmd_cls2 re-re-registration failed\n");
         exit(5);
     }
@@ -150,33 +172,65 @@ function main()
 
     // registrer cds_cmd 1
     printf("MAIN: register CLS1\n");
-    if (($cds->cmd_cls_register($cmd_cls1)) == FALSE) {
+    if (($cds->cmd_cls_register($short_cls, 10)) == FALSE) {
         fprintf(STDERR, "MAIN: cmd_cls1 registration failed\n");
         exit(1);
     }
 
     // register cds_cmd 2
     printf("MAIN: register CLS2\n");
-    if (($cds->cmd_cls_register($cmd_cls2)) == FALSE) {
+    if (($cds->cmd_cls_register($long_cls, 4)) == FALSE) {
         fprintf(STDERR, "MAIN: cmd_cls2 registration failed\n");
         exit(2);
     }
-    printf("MAIN: CDS:\n");
-    print_r($cds);
-    printf("MAIN: SUCCESS\n");
+    printf("MAIN:");
+    if (($debug & 1) == 1) {
+        printf(" CDS:\n");
+        print_r($cds);
+    }
+    printf("\n");
 
-    for ($i = 0 ; $i < 10 ; $i++) {
-        if ($i == 2) {
+    // for ($i = -15 ; $i < 30 ; $i++) {
+    for ($i = 0 ; $i < 20 ; $i++) {
+        printf("MAIN: START ITERATION %d\n", $i);
+
+         if ($i == 2) {
             printf("MAIN: load short\n");
             if ($cds->execute("short", WEBURL.'/short.php') == FALSE) {
                 printf("MAIN: push command failed\n");
                 exit(123);
             }
         }
+
+         if ($i == 3) {
+            printf("MAIN: load short\n");
+            if ($cds->execute("short", WEBURL.'/short.php') == FALSE) {
+                printf("MAIN: push command failed\n");
+                exit(123);
+            }
+        }
+
+        if ($i == 4) {
+            printf("MAIN: load long\n");
+            if ($cds->execute("long", WEBURL.'/long.php') == FALSE) {
+                printf("MAIN: push command failed\n");
+                exit(123);
+            }
+        }
+
+        printf("MAIN:");
+        if (($debug & 1) == 1) {
+            printf(" CDS:\n");
+            print_r($cds);
+        }
+        printf("\n");
+
         printf("MAIN: Call process\n");
         $cds->process();
-        usleep(500000);
+        sleep(1);
     }
+    printf("MAIN: finished, dump cds:\n");
+    print_r($cds);
     // start loop
     //   print status
     //   if input data execute some command
