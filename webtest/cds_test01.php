@@ -2,6 +2,7 @@
 <?php
 
 define('WEBURL', 'http://localhost/curl-de-sac');
+define('DBG_LEVEL', 0);
 
 require_once('Obj/curl-de-sac.phh');
 
@@ -24,7 +25,7 @@ class short_cmd_cls extends CDS_cmd_cls {
     function create($cds, $url)
     {
         if ($cds->dbg_get() > 0) {
-            printf("short::create url:[%s]\n", $url);
+            printf("'short'::create url:[%s]\n", $url);
         }
 
         do {
@@ -44,17 +45,17 @@ class short_cmd_cls extends CDS_cmd_cls {
 
     function process($cmd, $ret)
     {
-        printf("CURL: curl_multi_getcontent\n");
+        if ($this->dbg_get() > 2) { printf("CURL: 'short' process: curl_multi_getcontent\n"); }
+
         $content = curl_multi_getcontent($cmd->ch_get());
-        if ($this->dbg_get() > 0) {
-            printf("short process: [%s]\n", $content);
-        }
+        if ($this->dbg_get() > 0) { printf("'short' process: [%s]\n", $content); }
+
         return TRUE;
     }
 
     function timeout($cmd)
     {
-        printf("Short timeout function reached\n");
+        printf("'Short' timeout function reached\n");
     }
 }
 
@@ -77,7 +78,7 @@ class long_cmd_cls extends CDS_cmd_cls {
     function create($cds, $url)
     {
         if ($cds->dbg_get() > 0) {
-            printf("long::create url:[%s]\n", $url);
+            printf("'long'::create url:[%s]\n", $url);
         }
 
         do {
@@ -97,61 +98,60 @@ class long_cmd_cls extends CDS_cmd_cls {
 
     function process($cmd, $ret)
     {
-        printf("CURL: curl_multi_getcontent\n");
+        if ($this->dbg_get() > 2) { printf("CURL: 'long' process: curl_multi_getcontent\n"); }
+
         $content = curl_multi_getcontent($cmd->ch_get());
-        if ($this->dbg_get() > 0) {
-            printf("long process: [%s]\n", $content);
-        }
+        if ($this->dbg_get() > 0) { printf("'long' process: [%s]\n", $content); }
 
         return TRUE;
     }
 
     function timeout($cmd)
     {
-        printf("Long timeout function reached\n");
+        printf("'Long' timeout function reached\n");
     }
 }
 
 
 function main()
 {
-    $debug = 998;
+    $debug = DBG_LEVEL;
     // create cds
     $cds = new Curl_de_sac($debug);
 
-    // create cds_cmd 1
+    // create short_cls
     $short_cls = new short_cmd_cls();
 
-    // registrer cds_cmd 1
-    printf("MAIN: Register CLS1\n");
+    // registrer short_cls
+    printf("MAIN: Register 'short_cls'\n");
     if (($cds->cmd_cls_register($short_cls)) == FALSE) {
-        fprintf(STDERR, "MAIN: cmd_cls1 registration failed\n");
+        fprintf(STDERR, "MAIN: 'short_cls' registration failed\n");
         exit(1);
     }
 
-    // create cds_cmd 2
+    // create long_cls
     $long_cls = new long_cmd_cls();
 
-    // register cds_cmd 2
-    printf("MAIN: Register CLS2\n");
+    // register long_cls
+    printf("MAIN: Register 'long_cls'\n");
     if (($cds->cmd_cls_register($long_cls)) == FALSE) {
-        fprintf(STDERR, "MAIN: cmd_cls2 registration failed\n");
+        fprintf(STDERR, "MAIN: 'long_cls' registration failed\n");
         exit(2);
     }
 
-    // register cds_cmd 2 (retry)
-    printf("MAIN: Re-register CLS2 (must go wrong)\n");
+    // register long_cls (retry)
+    printf("MAIN: Re-register 'long_cls' (must go wrong)\n");
     if (($cds->cmd_cls_register($long_cls)) != FALSE) {
-        fprintf(STDERR, "MAIN: cmd_cls2 re-registration success\n");
+        fprintf(STDERR, "MAIN: 'long_cls' re-registration success\n");
         exit(3);
     }
 
     printf("MAIN: CDS:\n");
     if (($debug & 1) == 1)
         print_r($cds);
-    printf("MAIN: Deregister CLS2\n");
+    printf("MAIN: Deregister 'long_cls'\n");
     if (($cds->cmd_cls_deregister($long_cls)) == FALSE) {
-        fprintf(STDERR, "MAIN: cmd_cls2 deregistration failed\n");
+        fprintf(STDERR, "MAIN: 'long_cls' deregistration failed\n");
         exit(4);
     }
     printf("MAIN:");
@@ -160,27 +160,27 @@ function main()
         print_r($cds);
     }
     printf("\n");
-    // re-re-register cds_cmd 2
-    printf("MAIN: Re-re-register CLS2\n");
+    // re-re-register long_cls
+    printf("MAIN: Re-re-register 'long_cls'\n");
     if (($cds->cmd_cls_register($long_cls)) == FALSE) {
-        fprintf(STDERR, "MAIN: cmd_cls2 re-re-registration failed\n");
+        fprintf(STDERR, "MAIN: 'long_cls' re-re-registration failed\n");
         exit(5);
     }
 
     printf("MAIN: Deregister all\n");
     $cds->cmd_cls_deregister_all();
 
-    // registrer cds_cmd 1
-    printf("MAIN: register CLS1\n");
+    // registrer short_cls
+    printf("MAIN: register 'short_cls'\n");
     if (($cds->cmd_cls_register($short_cls, 10)) == FALSE) {
-        fprintf(STDERR, "MAIN: cmd_cls1 registration failed\n");
+        fprintf(STDERR, "MAIN: 'short_cls' registration failed\n");
         exit(1);
     }
 
-    // register cds_cmd 2
-    printf("MAIN: register CLS2\n");
+    // register long_cls
+    printf("MAIN: register 'long_cls'\n");
     if (($cds->cmd_cls_register($long_cls, 4)) == FALSE) {
-        fprintf(STDERR, "MAIN: cmd_cls2 registration failed\n");
+        fprintf(STDERR, "MAIN: 'long_cls' registration failed\n");
         exit(2);
     }
     printf("MAIN:");
@@ -195,25 +195,25 @@ function main()
         printf("MAIN: START ITERATION %d\n", $i);
 
          if ($i == 2) {
-            printf("MAIN: load short\n");
+            printf("MAIN: load 'short'\n");
             if ($cds->execute("short", WEBURL.'/short.php') == FALSE) {
-                printf("MAIN: push command failed\n");
+                printf("MAIN: push 'short' command failed\n");
                 exit(123);
             }
         }
 
          if ($i == 3) {
-            printf("MAIN: load short\n");
+            printf("MAIN: load 'short'\n");
             if ($cds->execute("short", WEBURL.'/short.php') == FALSE) {
-                printf("MAIN: push command failed\n");
+                printf("MAIN: push 'short' command failed\n");
                 exit(123);
             }
         }
 
         if ($i == 4) {
-            printf("MAIN: load long\n");
+            printf("MAIN: load 'long'\n");
             if ($cds->execute("long", WEBURL.'/long.php') == FALSE) {
-                printf("MAIN: push command failed\n");
+                printf("MAIN: push 'long' command failed\n");
                 exit(123);
             }
         }
