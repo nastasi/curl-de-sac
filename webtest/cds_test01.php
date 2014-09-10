@@ -1,7 +1,7 @@
 #!/usr/bin/php
 <?php
 
-define('WEBURL', 'http://localhost/curl-de-sac');
+define('WEB_URL', 'http://localhost/curl-de-sac');
 define('DBG_LEVEL', 0);
 
 require_once('Obj/curl-de-sac.phh');
@@ -196,7 +196,7 @@ function main()
 
          if ($i == 2) {
             printf("MAIN: load 'short'\n");
-            if ($cds->execute("short", WEBURL.'/short.php') == FALSE) {
+            if ($cds->execute("short", WEB_URL.'/short.php') == FALSE) {
                 printf("MAIN: push 'short' command failed\n");
                 exit(123);
             }
@@ -204,7 +204,7 @@ function main()
 
          if ($i == 3) {
             printf("MAIN: load 'short'\n");
-            if ($cds->execute("short", WEBURL.'/short.php') == FALSE) {
+            if ($cds->execute("short", WEB_URL.'/short.php') == FALSE) {
                 printf("MAIN: push 'short' command failed\n");
                 exit(123);
             }
@@ -212,7 +212,7 @@ function main()
 
         if ($i == 4) {
             printf("MAIN: load 'long'\n");
-            if ($cds->execute("long", WEBURL.'/long.php') == FALSE) {
+            if ($cds->execute("long", WEB_URL.'/long.php') == FALSE) {
                 printf("MAIN: push 'long' command failed\n");
                 exit(123);
             }

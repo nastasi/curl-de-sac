@@ -8,6 +8,8 @@ CONFIG_FILE="$HOME/.curl-de-sac_install"
 apache_conf="/etc/apache2/sites-available/default"
 # brisk_debug="0xffff"
 web_path="/home/nastasi/web/curl-de-sacccc"
+web_url="http://localhost/curl-de-sac"
+dbg_level=998
 # ftok_path="/home/nastasi/brisk-priv/ftok/brisk"
 # proxy_path="/home/nastasi/brisk-priv/proxy/brisk"
 # sys_user="www-data"
@@ -37,8 +39,9 @@ function usage () {
     # echo "  -T number of auth-only tables   - def. $tables_auth_n"
     # echo "  -G number of cert-only tables   - def. $tables_cert_n"
     # echo "  -a authorization file name      - def. \"$brisk_auth_conf\""
-    # echo "  -d activate dabug               - def. $brisk_debug"
-    echo "  -w dir where place the web tree - def. \"$web_path\""
+    echo "  -d set debug level                - def. $dbg_level"
+    echo "  -w dir where place the web tree   - def. \"$web_path\""
+    echo "  -U web url to retrieve test pages - def. \"$web_url\""
     # echo "  -k dir where place ftok files   - def. \"$ftok_path\""
     # echo "  -l dir where save logs          - def. \"$legal_path\""
     # echo "  -y dir where place proxy files  - def. \"$proxy_path\""
@@ -46,7 +49,7 @@ function usage () {
     # echo "  -C config filename              - def. \"$brisk_conf\""
     # echo "  -U unix socket path             - def. \"$usock_path\""
     # echo "  -u system user to run brisk dae - def. \"$sys_user\""
-    echo "  -x copy tests as normal php     - def. \"$test_add\""
+    echo "  -x copy tests as normal php       - def. \"$test_add\""
     echo
 }
 
@@ -144,8 +147,9 @@ while [ $# -gt 0 ]; do
 #        -T*) tables_auth_n="$(get_param "-T" "$1" "$2")"; sh=$?;;
 #        -G*) tables_cert_n="$(get_param "-G" "$1" "$2")"; sh=$?;;
 #        -a*) brisk_auth_conf="$(get_param "-a" "$1" "$2")"; sh=$?;;
-#        -d*) brisk_debug="$(get_param "-d" "$1" "$2")"; sh=$?;;
+        -d*) dbg_level="$(get_param "-d" "$1" "$2")"; sh=$?;;
         -w*) web_path="$(get_param "-w" "$1" "$2")"; sh=$?;;
+        -U*) web_url="$(get_param "-U" "$1" "$2")" ; sh=$?;;
 #        -k*) ftok_path="$(get_param "-k" "$1" "$2")"; sh=$?;;
 #        -y*) proxy_path="$(get_param "-y" "$1" "$2")"; sh=$?;;
 #        -P*) prefix_path="$(get_param "-P" "$1" "$2")"; sh=$?;;
@@ -179,8 +183,9 @@ echo "    outconf:    \"$outconf\""
 # echo "    tables_auth_n: $tables_auth_n"
 # echo "    tables_cert_n: $tables_cert_n"
 # echo "    brisk_auth_conf: \"$brisk_auth_conf\""
-# echo "    brisk_debug:\"$brisk_debug\""
+echo "    dbg_level:  $dbg_level"
 echo "    web_path:   \"$web_path\""
+echo "    web_url:    \"$web_url\""
 # echo "    ftok_path:  \"$ftok_path\""
 # echo "    legal_path: \"$legal_path\""
 # echo "    proxy_path: \"$proxy_path\""
@@ -202,8 +207,9 @@ if [ ! -z "$outconf" ]; then
     # echo "tables_auth_n=$tables_auth_n"
     # echo "tables_cert_n=$tables_cert_n"
     # echo "brisk_auth_conf=\"$brisk_auth_conf\""
-    # echo "brisk_debug=\"$brisk_debug\""
+    echo "dbg_level=$dbg_level"
     echo "web_path=\"$web_path\""
+    echo "web_url=\"$web_url\""
     # echo "ftok_path=\"$ftok_path\""
     # echo "proxy_path=\"$proxy_path\""
     # echo "legal_path=\"$legal_path\""
@@ -216,7 +222,8 @@ if [ ! -z "$outconf" ]; then
   ) > "$outconf"
 fi
 
-if [ "$action" = "system" -a 1 -eq 0 ]; then
+if [ 1 -eq 0 -a "$action" = "system" ]; then
+    # no used
     scrname="$(echo "$prefix_path" | sed 's@^/@@g;s@/$@@g;s@/@_@g;')"
     echo
     echo "script name:  [$scrname]"
@@ -285,7 +292,7 @@ fi
 # sed -i "s/^var G_send_time *= *[0-9]\+/var G_send_time = $send_time/g" $(find ${web_path} -type f -name '*.js' -exec grep -l '^var G_send_time *= *[0-9]\+' {} \;)
 
 # # .ph[pho] substitutions
-# sed -i "s/define *( *'PLAYERS_N', *[0-9]\+ *)/define('PLAYERS_N', $players_n)/g" $(find ${web_path} -type f -name '*.ph*' -exec grep -l "define *( *'PLAYERS_N', *[0-9]\+ *)" {} \;)
+sed -i "s@^define *( *'WEB_URL', *'[^']\+' *)@define('WEB_URL', '$web_url')@g;s@define *( *'DBG_LEVEL', *[0-9]\+ *)@define('DBG_LEVEL', $dbg_level)@g" $(find ${web_path} -type f -name '*.ph*')
 
 # sed -i "s/define *( *'BIN5_PLAYERS_N', *[0-9]\+ *)/define('BIN5_PLAYERS_N', $players_n)/g" $(find ${web_path} -type f -name '*.ph*' -exec grep -l "define *( *'BIN5_PLAYERS_N', *[0-9]\+ *)" {} \;)
 

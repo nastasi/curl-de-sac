@@ -3,6 +3,7 @@ TODO LIST
 - move name and timeout class to register function
   to be able to use the same class different times
 
+DONE - add parameter to set WEB_URL and DBG_LEVEL defines
 DONE - debugging system
 DONE - timeout handling
 DONE - remove cmd from list when accomplished
