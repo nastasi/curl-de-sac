@@ -1,0 +1,63 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html><head>
+
+
+
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Tor Network Status -- Tor Exit Query</title>
+<link rel="stylesheet" type="text/css" href="tor_exit_query.php_files/main.css">
+</head><body class="BOD">
+<br><br>
+<table border="0" cellpadding="2" cellspacing="2" width="70%" align="center">
+
+<tbody><tr>
+<td class="PT"><br><a href="http://torstatus.blutmagie.de/index.php">Tor Network Status</a> -- Tor Exit Query<br><br></td>
+</tr>
+
+<tr>
+<td class="TRC"><br><br><br><b>You can use this page to determine if an
+IP address is an active Tor server, and optionally see if that Tor
+server's Exit Policy would permit it to exit to a certain destination
+IP address and port.</b><br></td>
+</tr>
+
+<tr>
+<td class="TRC"><br><br><b><font color="#00dd00">-The IP Address you entered matches one or more active Tor servers-</font><br><br>Server name: <a class="plain" href="http://torstatus.blutmagie.de/router_detail.php?FP=89e3170b4e2fc9a430fb97536769fc0abf6c4db3">hviv103</a><br><br></b></td>
+</tr>
+
+<tr>
+<td class="TRSCN"><br>
+
+<table border="1" cellpadding="8" cellspacing="2" width="20%" align="center">
+<tbody><tr>
+<td class="TRSCN">
+<br>
+
+<form action="/tor_exit_query.php" method="post">
+<b>IP Address to Query:<br><span class="TRSM">(Required)</span></b><br>
+<input name="QueryIP" class="BOX" maxlength="15" size="20" value="178.162.193.213" type="text"><br><br><br>
+<b>Destination IP Address:<br><span class="TRSM">(Optional)</span></b><br>
+<input name="DestinationIP" class="BOX" maxlength="15" size="20" type="text"><br><br>
+<b>Destination Port:<br><span class="TRSM">(Optional)</span></b><br>
+<input name="DestinationPort" class="BOX" maxlength="5" size="6" type="text"><br><br><br>
+<input value="Submit Query" type="submit"><br><br>
+</form>
+
+</td>
+</tr>
+</tbody></table>
+
+<br><br>
+</td>
+</tr>
+
+</tbody></table>
+
+<br><br><br>
+
+<table border="0" cellpadding="2" cellspacing="2" width="70%" align="center">
+<tbody><tr>
+<td class="TRC"><b><a class="plain" href="http://torstatus.blutmagie.de/index.php">Tor Network Status</a> v3.6.1<br><a class="plain" href="http://torstatus.blutmagie.de/CHANGES" target="_new">View Complete Change History</a><br>Copyright © 2006-2007, Joseph B. Kowalski<br>Portions Copyright © 2007, Kasimir Gabert<br>Source code is available under <a class="plain" href="http://torstatus.blutmagie.de/LICENSE" target="_new">BSD license</a> at <a class="plain" href="http://project.torstatus.kgprog.com/" target="_new">project.torstatus.kgprog.com</a></b></td>
+</tr>
+</tbody></table>
+</body></html>

@@ -1,0 +1,94 @@
+<?php
+
+require_once('Obj/curl-de-sac.phh');
+
+define('TOR_CHK_URL', 'http://localhost/curl-de-sac/test/tor_mock.php');
+
+class tor_chk_cmd extends CDS_cmd {
+    var $ctx;
+    var $user_idx;
+    var $user_sess;
+    var $conn_ip;
+
+    function tor_chk_cmd($cmd_cls, $ch, $ctx, $user_idx, $user_sess, $conn_ip)
+    {
+        parent::__construct($cmd_cls, $ch);
+        $this->ctx       = $ctx;
+        $this->user_idx  = $user_idx;
+        $this->user_sess = $user_sess;
+        $this->conn_ip   = $conn_ip;
+    }
+}
+
+class tor_chk_cmd_cls extends CDS_cmd_cls {
+    function tor_chk_cmd_cls()
+    {
+        parent::__construct("tor_chk", 10);
+    }
+
+    function create($cds, $ctx, $user_idx, $user_sess, $conn_ip)
+    {
+        if ($cds->dbg_get() > 0) {
+            printf("'tor_chk'::create url:[%s]\n", 'TOR_CHK_URL');
+        }
+
+        do {
+            $opts = array( CURLOPT_HEADER => 0,
+                           CURLOPT_RETURNTRANSFER => 1,
+                           CURLOPT_FORBID_REUSE => true,
+                           CURLOPT_HTTPHEADER => array('Connection: close'),
+                           CURLOPT_POST => true,
+                           CURLOPT_POSTFIELDS => array('QueryIP' => $conn_ip));
+
+            if (($ch = parent::pre_create($cds, TOR_CHK_URL, $opts)) == FALSE)
+                break;
+
+            if (parent::create($cds, $ch) == FALSE)
+                break;
+
+            $cmd = new tor_chk_cmd($this, $ch, $ctx, $user_idx, $user_sess, $conn_ip);
+
+            return $cmd;
+        } while (FALSE);
+        
+        return FALSE;
+    }
+
+    function process($cmd, $ret)
+    {
+        if ($this->dbg_get() > 2) { 
+            printf("CURL: 'tor_chk' process: curl_multi_getcontent\n");
+            print_r($ret);
+        }
+
+        $content = curl_multi_getcontent($cmd->ch_get());
+        if ($this->dbg_get() > 0) { printf("'tor_chk' process: [%s]\n", $content); }
+
+        $is_tor = FALSE;
+        if (mb_strpos($content,
+                       "The IP Address you entered matches one or more active Tor servers",
+                       0, "UTF-8") !== FALSE) {
+            printf("WARNING: stripos ok\n");
+            $is_tor = TRUE;
+        }
+        else if (mb_strpos($content,
+                       "The IP Address you entered is NOT an active Tor server",
+                            0, "UTF-8") === FALSE) {
+            printf("WARNING: tor check disabled\n");
+        }
+        else {
+            printf("WARNING: NOT an active ...\n");
+        }
+
+        $cmd->ctx->cds_postprocess($cmd->user_idx, $cmd->user_sess, $cmd->conn_ip, $is_tor);
+
+        return TRUE;
+    }
+
+    function timeout($cmd)
+    {
+        printf("'tor_chk' timeout function reached\n");
+    }
+}
+
+?>
