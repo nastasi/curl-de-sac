@@ -2,7 +2,7 @@
 
 require_once('Obj/curl-de-sac.phh');
 
-define('TOR_CHK_URL', 'http://localhost/curl-de-sac/test/tor_mock.php');
+define('TOR_CHK_URL', 'http://localhost/curl-de-sac/test/tor_mock.ppp');
 
 class tor_chk_cmd extends CDS_cmd {
     var $ctx;
