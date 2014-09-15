@@ -67,16 +67,23 @@ class CDS_cmd_cls {
         $this->cds = $cds;
     }
 
-    static function pre_create($cds, $url)
+    static function pre_create($cds, $url, $opts=NULL)
     {
         if ($cds->dbg_get() > 2) { printf("CURL: curl_init\n"); }
         if (($ch = curl_init()) == FALSE)
             return FALSE;
         curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_HEADER, 0);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_FORBID_REUSE, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Connection: close'));
+        if ($opts == NULL) {
+            curl_setopt($ch, CURLOPT_HEADER, 0);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            curl_setopt($ch, CURLOPT_FORBID_REUSE, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array('Connection: close'));
+        }
+        else {
+            foreach($opts as $opt => $value) {
+                curl_setopt($ch, $opt, $value);
+            }
+        }
         return ($ch);
     }
 

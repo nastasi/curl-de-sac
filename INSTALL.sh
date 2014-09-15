@@ -274,15 +274,19 @@ for i in $(find web -type d | grep '/' | sed 's/^....//g'); do
     install -d ${web_path}/$i 
 done
 
-for i in $(find web -name '.htaccess' -o -name '*.php' -o -name '*.phh' -o -name '*.pho' -o -name '*.css' -o -name '*.js' -o -name '*.mp3' -o -name '*.swf' -o -name 'terms-of-service*' | sed 's/^....//g'); do
+for i in $(find web -name '.htaccess' -o -name '*.php' -o -name '*.phh' -o -name '*.pho' -o -name '*.html' -o -name '*.css' -o -name '*.js' -o -name '*.mp3' -o -name '*.swf' -o -name 'terms-of-service*' | sed 's/^....//g'); do
     install -m 644 "web/$i" "${web_path}/$i"
 done
 if [ "$test_add" = "TRUE" ]; then
-    for i in $(find webtest -name '.htaccess' -o -name '*.phh' -o -name '*.pho' -o -name '*.css' -o -name '*.js' -o -name '*.mp3' -o -name '*.swf' -o -name 'terms-of-service*' | sed 's/^........//g'); do
-        install -m 644 "webtest/$i" "${web_path}/$i"
+    for i in $(find webtest -type d | grep '/' | sed 's/^........//g'); do
+        install -d ${web_path}/test/$i
+    done
+
+    for i in $(find webtest -name '.htaccess' -o -name '*.phh' -o -name '*.pho' -o -name '*.html' -o -name '*.css' -o -name '*.js' -o -name '*.mp3' -o -name '*.swf' -o -name 'terms-of-service*' | sed 's/^........//g'); do
+        install -m 644 "webtest/$i" "${web_path}/test/$i"
     done
     for i in $(find webtest -name '*.php' | sed 's/^........//g'); do
-        install -m 755 "webtest/$i" "${web_path}/$i"
+        install -m 755 "webtest/$i" "${web_path}/test/$i"
     done
 fi
 
