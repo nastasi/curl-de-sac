@@ -1,6 +1,6 @@
 <?php
 
-require_once('Obj/curl-de-sac.phh');
+require_once($G_base . 'Obj/curl-de-sac.phh');
 
 define('TOR_CHK_URL', 'http://localhost/curl-de-sac/test/tor_mock.ppp');
 

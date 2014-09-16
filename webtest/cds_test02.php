@@ -5,8 +5,10 @@ define('WEB_URL', 'http://localhost/curl-de-sac');
 define('TOR_CHK_URL', 'http://localhost/curl-de-sac/test/tor_mock.php');
 define('DBG_LEVEL', 0);
 
-require_once('Obj/curl-de-sac.phh');
-require_once('Obj/curl-de-brisk.phh');
+$G_base = "./";
+
+require_once($G_base . 'Obj/curl-de-sac.phh');
+require_once($G_base . 'Obj/curl-de-brisk.phh');
 
 class Brisk_mock {
     function cds_postprocess($user_idx, $user_sess, $conn_ip, $is_tor)
