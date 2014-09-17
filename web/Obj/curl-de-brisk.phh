@@ -9,14 +9,16 @@ class tor_chk_cmd extends CDS_cmd {
     var $user_idx;
     var $user_sess;
     var $conn_ip;
+    var $is_auth;
 
-    function tor_chk_cmd($cmd_cls, $ch, $ctx, $user_idx, $user_sess, $conn_ip)
+    function tor_chk_cmd($cmd_cls, $ch, $ctx, $user_idx, $user_sess, $conn_ip, $is_auth)
     {
         parent::__construct($cmd_cls, $ch);
         $this->ctx       = $ctx;
         $this->user_idx  = $user_idx;
         $this->user_sess = $user_sess;
         $this->conn_ip   = $conn_ip;
+        $this->is_auth   = $is_auth;
     }
 }
 
@@ -26,7 +28,7 @@ class tor_chk_cmd_cls extends CDS_cmd_cls {
         parent::__construct("tor_chk", 10);
     }
 
-    function create($cds, $ctx, $user_idx, $user_sess, $conn_ip)
+    function create($cds, $ctx, $user_idx, $user_sess, $conn_ip, $is_auth)
     {
         if ($cds->dbg_get() > 0) {
             printf("'tor_chk'::create url:[%s]\n", 'TOR_CHK_URL');
@@ -46,7 +48,7 @@ class tor_chk_cmd_cls extends CDS_cmd_cls {
             if (parent::create($cds, $ch) == FALSE)
                 break;
 
-            $cmd = new tor_chk_cmd($this, $ch, $ctx, $user_idx, $user_sess, $conn_ip);
+            $cmd = new tor_chk_cmd($this, $ch, $ctx, $user_idx, $user_sess, $conn_ip, $is_auth);
 
             return $cmd;
         } while (FALSE);
@@ -68,7 +70,7 @@ class tor_chk_cmd_cls extends CDS_cmd_cls {
         if (mb_strpos($content,
                        "The IP Address you entered matches one or more active Tor servers",
                        0, "UTF-8") !== FALSE) {
-            printf("WARNING: stripos ok\n");
+            // printf("WARNING: stripos ok\n");
             $is_tor = TRUE;
         }
         else if (mb_strpos($content,
@@ -77,10 +79,11 @@ class tor_chk_cmd_cls extends CDS_cmd_cls {
             printf("WARNING: tor check disabled\n");
         }
         else {
-            printf("WARNING: NOT an active ...\n");
+            // printf("WARNING: NOT an active Tor server on IP [%s]\n", $cmd->conn_ip);
+            ;
         }
 
-        $cmd->ctx->cds_postprocess($cmd->user_idx, $cmd->user_sess, $cmd->conn_ip, $is_tor);
+        $cmd->ctx->tor_chk_postprocess($cmd->user_idx, $cmd->user_sess, $cmd->conn_ip, $cmd->is_auth, $is_tor);
 
         return TRUE;
     }
