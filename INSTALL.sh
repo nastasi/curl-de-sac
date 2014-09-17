@@ -224,7 +224,7 @@ if [ ! -z "$outconf" ]; then
     # echo "usock_path=\"$usock_path\""
     # echo "sys_user=\"$sys_user\""
     # echo "web_only=\"$web_only\""
-    # echo "test_add=\"$test_add\""
+    echo "test_add=\"$test_add\""
   ) > "$outconf"
 fi
 
