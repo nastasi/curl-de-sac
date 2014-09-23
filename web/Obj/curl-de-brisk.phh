@@ -4,14 +4,14 @@ require_once($G_base . 'Obj/curl-de-sac.phh');
 
 define('TOR_CHK_URL', 'http://localhost/curl-de-sac/test/tor_mock.ppp');
 
-class tor_chk_cmd extends CDS_cmd {
+class Tor_chk_cmd extends CDS_cmd {
     var $ctx;
     var $user_idx;
     var $user_sess;
     var $conn_ip;
     var $is_auth;
 
-    function tor_chk_cmd($cmd_cls, $ch, $ctx, $user_idx, $user_sess, $conn_ip, $is_auth)
+    function Tor_chk_cmd($cmd_cls, $ch, $ctx, $user_idx, $user_sess, $conn_ip, $is_auth)
     {
         parent::__construct($cmd_cls, $ch);
         $this->ctx       = $ctx;
@@ -22,8 +22,8 @@ class tor_chk_cmd extends CDS_cmd {
     }
 }
 
-class tor_chk_cmd_cls extends CDS_cmd_cls {
-    function tor_chk_cmd_cls()
+class Tor_chk_cmd_cls extends CDS_cmd_cls {
+    function Tor_chk_cmd_cls()
     {
         parent::__construct("tor_chk", 10);
     }
@@ -48,7 +48,7 @@ class tor_chk_cmd_cls extends CDS_cmd_cls {
             if (parent::create($cds, $ch) == FALSE)
                 break;
 
-            $cmd = new tor_chk_cmd($this, $ch, $ctx, $user_idx, $user_sess, $conn_ip, $is_auth);
+            $cmd = new Tor_chk_cmd($this, $ch, $ctx, $user_idx, $user_sess, $conn_ip, $is_auth);
 
             return $cmd;
         } while (FALSE);
