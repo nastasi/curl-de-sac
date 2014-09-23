@@ -3,6 +3,7 @@
 require_once($G_base . 'Obj/curl-de-sac.phh');
 
 define('TOR_CHK_URL', 'http://localhost/curl-de-sac/test/tor_mock.ppp');
+define('PROXY_CHK_URL', 'http://localhost/curl-de-sac/test/proxy_mock.ppp');
 
 class Tor_chk_cmd extends CDS_cmd {
     var $ctx;
@@ -52,13 +53,13 @@ class Tor_chk_cmd_cls extends CDS_cmd_cls {
 
             return $cmd;
         } while (FALSE);
-        
+
         return FALSE;
     }
 
     function process($cmd, $ret)
     {
-        if ($this->dbg_get() > 2) { 
+        if ($this->dbg_get() > 2) {
             printf("CURL: 'tor_chk' process: curl_multi_getcontent\n");
             print_r($ret);
         }
@@ -91,6 +92,114 @@ class Tor_chk_cmd_cls extends CDS_cmd_cls {
     function timeout($cmd)
     {
         printf("'tor_chk' timeout function reached\n");
+    }
+}
+
+class Proxy_chk_cmd_cls extends CDS_cmd_cls {
+    function Proxy_chk_cmd_cls()
+    {
+        parent::__construct("proxy_chk", 10);
+
+        $this->scan_headers = array(
+                                    'HTTP_VIA',
+                                    'HTTP_X_FORWARDED_FOR',
+                                    'HTTP_FORWARDED_FOR',
+                                    'HTTP_X_FORWARDED',
+                                    'HTTP_FORWARDED',
+                                    'HTTP_CLIENT_IP',
+                                    'HTTP_FORWARDED_FOR_IP',
+                                    'VIA',
+                                    'X_FORWARDED_FOR',
+                                    'FORWARDED_FOR',
+                                    'X_FORWARDED',
+                                    'FORWARDED',
+                                    'CLIENT_IP',
+                                    'FORWARDED_FOR_IP',
+                                    'HTTP_PROXY_CONNECTION'
+                                    );
+    }
+
+    function create($cds, $ctx, $user_idx, $user_sess, $conn_ip, $is_auth, $headers)
+    {
+        if ($cds->dbg_get() > 0) {
+            printf("'proxy_chk'::create url:[%s]\n", 'PROXY_CHK_URL');
+        }
+
+        foreach($this->scan_headers as $key){
+            //proxy detected? lets log...
+            if($headers[$key]) {
+                // we already are behind a PROXY, this are our headers
+                if ($key == 'X-Proxy-ID') {
+                    if ($headers[$key] == '860705422')
+                        continue;
+                }
+                else if ($key == 'X-Forwarded-For') {
+                    if ($headers[$key] == '172.16.9.66')
+                        continue;
+                }
+                else if ($key == 'Via') {
+                    if ($headers[$key] == '1.1 172.16.8.1 (Mikrotik HttpProxy)')
+                        continue;
+                }
+
+                $ctx->proxy_chk_postprocess($user_idx, $user_sess, $conn_ip, $is_auth, TRUE);
+                return TRUE;
+            }
+        }
+
+        do {
+            $opts = array( CURLOPT_HEADER => 0,
+                           CURLOPT_RETURNTRANSFER => 1,
+                           CURLOPT_FORBID_REUSE => true,
+                           CURLOPT_HTTPHEADER => array('Connection: close'),
+                           CURLOPT_POST => true,
+                           CURLOPT_POSTFIELDS => array('conn_ip' => $conn_ip));
+
+            if (($ch = parent::pre_create($cds, PROXY_CHK_URL, $opts)) == FALSE)
+                break;
+
+            if (parent::create($cds, $ch) == FALSE)
+                break;
+
+            $cmd = new Proxy_chk_cmd($this, $ch, $ctx, $user_idx, $user_sess, $conn_ip, $is_auth);
+
+            return $cmd;
+        } while (FALSE);
+
+        return FALSE;
+    }
+
+    function process($cmd, $ret)
+    {
+        if ($this->dbg_get() > 2) {
+            printf("CURL: 'proxy_chk' process: curl_multi_getcontent\n");
+            print_r($ret);
+        }
+
+        $content = curl_multi_getcontent($cmd->ch_get());
+        if ($this->dbg_get() > 0) { printf("'proxy_chk' process: [%s]\n", $content); }
+
+        $is_proxy = FALSE;
+        if (mb_strpos($content, "is_proxy=true", 0, "UTF-8") !== FALSE) {
+            // printf("WARNING: stripos ok\n");
+            $is_proxy = TRUE;
+        }
+        else if (mb_strpos($content, "is_proxy=false", 0, "UTF-8") === FALSE) {
+            printf("WARNING: proxy check disabled\n");
+        }
+        else {
+            // printf("WARNING: NOT an active Proxy server on IP [%s]\n", $cmd->conn_ip);
+            ;
+        }
+
+        $cmd->ctx->proxy_chk_postprocess($cmd->user_idx, $cmd->user_sess, $cmd->conn_ip, $cmd->is_auth, $is_proxy);
+
+        return TRUE;
+    }
+
+    function timeout($cmd)
+    {
+        printf("'proxy_chk' timeout function reached\n");
     }
 }
 
