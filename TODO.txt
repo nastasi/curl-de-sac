@@ -1,5 +1,7 @@
 TODO LIST
 
+- pass the callback function to the command class
+
 - move name and timeout class to register function
   to be able to use the same class different times
 
