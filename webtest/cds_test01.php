@@ -4,7 +4,9 @@
 define('WEB_URL', 'http://localhost/curl-de-sac');
 define('DBG_LEVEL', 0);
 
-require_once('../Obj/curl-de-sac.phh');
+$G_base = "./";
+
+require_once($G_base . 'Obj/curl-de-sac.phh');
 
 class short_cmd extends CDS_cmd {
     var $short_data;

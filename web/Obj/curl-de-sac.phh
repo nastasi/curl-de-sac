@@ -22,7 +22,8 @@
  *
  */
 
-$G_curl_de_sac_version = "0.1";
+define('CURL_DE_SAC_VERS', '0.1');
+$G_curl_de_sac_vers = CURL_DE_SAC_VERS;
 
 class CDS_cmd {
     var $cmd_cls;
@@ -218,9 +219,11 @@ class Curl_de_sac {
             
             $cmd_cls = $this->cmd_cls[$name];
             
-            if (($inst = call_user_func_array(array($cmd_cls, "create"), $args)) == FALSE)
+            // custom create now can return synchronously returning true instead of a
+            // "command instance class" instance or false if any error occurs
+            $inst = call_user_func_array(array($cmd_cls, "create"), $args);
+            if (is_bool($inst))
                 break;
-
             array_push($this->cmd, $inst);
             if ($this->dbg > 1) { printf("CDS_cmd_cls::process - execute  push cmd\n"); }
             if (($this->dbg & 1) == 1) { print_r($this); }
@@ -228,7 +231,7 @@ class Curl_de_sac {
             return TRUE;
         } while (FALSE);
 
-        return FALSE;
+        return $inst;
     }
 
     function process($curtime=0)
