@@ -2,10 +2,14 @@
 <?php
 
 define('WEB_URL', 'http://localhost/curl-de-sac');
-define('TOR_CHK_URL', 'http://localhost/curl-de-sac/test/tor_mock.php');
 define('DBG_LEVEL', 0);
 
 $G_base = "./";
+
+function log_cds()
+{
+    printf("log_cds\n");
+}
 
 require_once($G_base . 'Obj/curl-de-sac.phh');
 require_once($G_base . 'Obj/curl-de-brisk.phh');
@@ -48,7 +52,7 @@ function main()
          if ($i == 2) {
              // Case OK
             printf("MAIN: load 'tor_chk'\n");
-            if ($cds->execute("tor_chk", $brisk, 24, "caffe", "178.162.193.213") == FALSE) {
+            if ($cds->execute("tor_chk", $brisk, 24, "caffe", "178.162.193.213", TRUE) == FALSE) {
                 printf("MAIN: push 'tor_chk' command failed\n");
                 exit(123);
             }
@@ -57,7 +61,7 @@ function main()
          else if ($i == 4) {
              // Case Malformed output
             printf("MAIN: load 'tor_chk'\n");
-            if ($cds->execute("tor_chk", $brisk, 24, "caffe", "178.162.193.214") == FALSE) {
+            if ($cds->execute("tor_chk", $brisk, 24, "caffe", "178.162.193.214", FALSE) == FALSE) {
                 printf("MAIN: push 'tor_chk' command failed\n");
                 exit(123);
             }
@@ -65,7 +69,7 @@ function main()
          else if ($i == 6) {
              // Case NO
             printf("MAIN: load 'tor_chk'\n");
-            if ($cds->execute("tor_chk", $brisk, 24, "caffe", "178.162.193.215") == FALSE) {
+            if ($cds->execute("tor_chk", $brisk, 24, "caffe", "178.162.193.215", TRUE) == FALSE) {
                 printf("MAIN: push 'tor_chk' command failed\n");
                 exit(123);
             }

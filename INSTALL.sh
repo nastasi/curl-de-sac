@@ -10,6 +10,7 @@ apache_conf="/etc/apache2/sites-available/default"
 web_path="/home/nastasi/web/curl-de-sacccc"
 web_url="http://localhost/curl-de-sac"
 tor_chk_url="http://localhost/curl-de-sac/test/tor_mock.php"
+proxy_chk_url="http://localhost/curl-de-sac/test/proxy_mock.php"
 dbg_level=998
 # ftok_path="/home/nastasi/brisk-priv/ftok/brisk"
 # proxy_path="/home/nastasi/brisk-priv/proxy/brisk"
@@ -27,7 +28,7 @@ function usage () {
 
     echo "$1 chk                          - run lintian on all ph* files."
 #    echo "$1 pkg                          - build brisk packages."
-    echo "$1 [-w <web_dir>] [-f <conffile>] [-p <outconf>] [-t <tor_chk_url>]" # [-W] [-n 3|5] [-t <(n>=4)>] [-T <auth_tab>] [-G <cert_tab>] [-A <apache-conf>] [-a <auth_file_name>] [-U <usock_path>] [-u <sys_user>] [-d <TRUE|FALSE>] [-k <ftok_dir>] [-l <legal_path>] [-y <proxy_path>] [-P <prefix_path>] [-x]"
+    echo "$1 [-w <web_dir>] [-f <conffile>] [-p <outconf>] [-t <tor_chk_url>] [-P <proxy_chk_url>]"  # [-W] [-n 3|5] [-t <(n>=4)>] [-T <auth_tab>] [-G <cert_tab>] [-A <apache-conf>] [-a <auth_file_name>] [-U <usock_path>] [-u <sys_user>] [-d <TRUE|FALSE>] [-k <ftok_dir>] [-l <legal_path>] [-y <proxy_path>] [-P <prefix_path>] [-x]"
 #    echo "$1 [-W] [-n 3|5] [-t <(n>=4)>] [-T <auth_tab>] [-G <cert_tab>] [-A <apache-conf>] [-a <auth_file_name>] [-f <conffile>] [-p <outconf>] [-U <usock_path>] [-u <sys_user>] [-d <TRUE|FALSE>] [-w <web_dir>] [-k <ftok_dir>] [-l <legal_path>] [-y <proxy_path>] [-P <prefix_path>] [-x]"
     echo "$1 [-w <web_dir>]"
     echo "  -h this help"
@@ -44,6 +45,7 @@ function usage () {
     echo "  -w dir where place the web tree   - def. \"$web_path\""
     echo "  -U web url to retrieve test pages - def. \"$web_url\""
     echo "  -t tor chk url                    - def. \"$tor_chk_url\""
+    echo "  -P proxy chk url                  - def. \"$proxy_chk_url\""
     # echo "  -k dir where place ftok files   - def. \"$ftok_path\""
     # echo "  -l dir where save logs          - def. \"$legal_path\""
     # echo "  -y dir where place proxy files  - def. \"$proxy_path\""
@@ -153,6 +155,7 @@ while [ $# -gt 0 ]; do
         -w*) web_path="$(get_param "-w" "$1" "$2")"; sh=$?;;
         -U*) web_url="$(get_param "-U" "$1" "$2")" ; sh=$?;;
         -t*) tor_chk_url="$(get_param "-t" "$1" "$2")" ; sh=$?;;
+        -P*) proxy_chk_url="$(get_param "-P" "$1" "$2")" ; sh=$?;;
 #        -k*) ftok_path="$(get_param "-k" "$1" "$2")"; sh=$?;;
 #        -y*) proxy_path="$(get_param "-y" "$1" "$2")"; sh=$?;;
 #        -P*) prefix_path="$(get_param "-P" "$1" "$2")"; sh=$?;;
@@ -190,6 +193,7 @@ echo "    dbg_level:  $dbg_level"
 echo "    web_path:   \"$web_path\""
 echo "    web_url:    \"$web_url\""
 echo "    tor_chk_url:    \"$tor_chk_url\""
+echo "    proxy_chk_url:    \"$proxy_chk_url\""
 
 # echo "    ftok_path:  \"$ftok_path\""
 # echo "    legal_path: \"$legal_path\""
@@ -216,6 +220,7 @@ if [ ! -z "$outconf" ]; then
     echo "web_path=\"$web_path\""
     echo "web_url=\"$web_url\""
     echo "tor_chk_url=\"$tor_chk_url\""
+    echo "proxy_chk_url=\"$proxy_chk_url\""
     # echo "ftok_path=\"$ftok_path\""
     # echo "proxy_path=\"$proxy_path\""
     # echo "legal_path=\"$legal_path\""
@@ -302,7 +307,10 @@ fi
 # sed -i "s/^var G_send_time *= *[0-9]\+/var G_send_time = $send_time/g" $(find ${web_path} -type f -name '*.js' -exec grep -l '^var G_send_time *= *[0-9]\+' {} \;)
 
 # # .ph[pho] substitutions
-sed -i "s@^define *( *'WEB_URL', *'[^']\+' *)@define('WEB_URL', '$web_url')@g;s@define *( *'DBG_LEVEL', *[0-9]\+ *)@define('DBG_LEVEL', $dbg_level)@g;s@define *( *'TOR_CHK_URL', *'[^']\+' *)@define('TOR_CHK_URL', '$tor_chk_url')@g" $(find ${web_path} -type f -name '*.ph*')
+sed -i "s@^define *( *'WEB_URL', *'[^']\+' *)@define('WEB_URL', '$web_url')@g;\
+s@define *( *'DBG_LEVEL', *[0-9]\+ *)@define('DBG_LEVEL', $dbg_level)@g;\
+s@define *( *'TOR_CHK_URL', *'[^']\+' *)@define('TOR_CHK_URL', '$tor_chk_url')@g;\
+s@define *( *'PROXY_CHK_URL', *'[^']\+' *)@define('PROXY_CHK_URL', '$proxy_chk_url')@g" $(find ${web_path} -type f -name '*.ph*')
 
 # sed -i "s/define *( *'BIN5_PLAYERS_N', *[0-9]\+ *)/define('BIN5_PLAYERS_N', $players_n)/g" $(find ${web_path} -type f -name '*.ph*' -exec grep -l "define *( *'BIN5_PLAYERS_N', *[0-9]\+ *)" {} \;)
 

@@ -5,6 +5,51 @@ require_once($G_base . 'Obj/curl-de-sac.phh');
 define('TOR_CHK_URL', 'http://localhost/curl-de-sac/test/tor_mock.ppp');
 define('PROXY_CHK_URL', 'http://localhost/curl-de-sac/test/proxy_mock.ppp');
 
+/*
+ *  Operational Brisk stuff
+ */
+function brisk_cds_reload($brisk)
+{
+    if ($brisk->cds != NULL) {
+        $brisk->cds->cmd_cls_deregister_all();
+        unset($brisk->cds);
+        $brisk->cds = NULL;
+    }
+    // create cds
+    $brisk->cds = new Curl_de_sac();
+
+    // create tor_chk_cls and proxy_chk_cls
+    $tor_chk_cls = new Tor_chk_cmd_cls();
+    $proxy_chk_cls = new Proxy_chk_cmd_cls();
+
+    // registrer tor_chk_cls and proxy_chk_cls
+    printf("MAIN: Register 'tor_chk_cls'\n");
+    if (($brisk->cds->cmd_cls_register($tor_chk_cls)) == FALSE) {
+        fprintf(STDERR, "MAIN: 'tor_chk_cls' registration failed\n");
+        return (FALSE);
+    }
+    printf("MAIN: Register 'proxy_chk_cls'\n");
+    if (($brisk->cds->cmd_cls_register($proxy_chk_cls)) == FALSE) {
+        fprintf(STDERR, "MAIN: 'proxy_chk_cls' registration failed\n");
+        return (FALSE);
+    }
+
+    return (TRUE);
+}
+
+function brisk_cds_execute($brisk, $real_idx, $sess, $ip, $authenticate)
+{
+    if ($brisk->cds->execute("tor_chk", $brisk, $ghost, $sess, $ip, $authenticate != FALSE) == FALSE) {
+        log_main("cds_execute failed");
+    }
+    if ($brisk->cds->execute("proxy_chk", $brisk, $ghost, $sess, $ip, $authenticate != FALSE) == FALSE) {
+        log_main("cds_execute failed");
+    }
+}
+
+/*
+ * CDS commands stuff
+ */
 class Tor_chk_cmd extends CDS_cmd {
     var $ctx;
     var $user_idx;
@@ -84,14 +129,32 @@ class Tor_chk_cmd_cls extends CDS_cmd_cls {
             ;
         }
 
-        $cmd->ctx->tor_chk_postprocess($cmd->user_idx, $cmd->user_sess, $cmd->conn_ip, $cmd->is_auth, $is_tor);
+        tor_chk_postprocess($cmd->ctx, $cmd->user_idx, $cmd->user_sess, $cmd->conn_ip, $cmd->is_auth, $is_tor);
 
         return TRUE;
     }
 
     function timeout($cmd)
     {
-        printf("'tor_chk' timeout function reached\n");
+        tor_chk_timeout_cb($cmd->ctx, $cmd->user_idx, $cmd->user_sess, $cmd->conn_ip, $cmd->is_auth);
+    }
+}
+
+class Proxy_chk_cmd extends CDS_cmd {
+    var $ctx;
+    var $user_idx;
+    var $user_sess;
+    var $conn_ip;
+    var $is_auth;
+
+    function Proxy_chk_cmd($cmd_cls, $ch, $ctx, $user_idx, $user_sess, $conn_ip, $is_auth)
+    {
+        parent::__construct($cmd_cls, $ch);
+        $this->ctx       = $ctx;
+        $this->user_idx  = $user_idx;
+        $this->user_sess = $user_sess;
+        $this->conn_ip   = $conn_ip;
+        $this->is_auth   = $is_auth;
     }
 }
 
@@ -142,7 +205,7 @@ class Proxy_chk_cmd_cls extends CDS_cmd_cls {
                         continue;
                 }
 
-                $ctx->proxy_chk_postprocess($user_idx, $user_sess, $conn_ip, $is_auth, TRUE);
+                proxy_chk_postprocess($ctx, $user_idx, $user_sess, $conn_ip, $is_auth, TRUE);
                 return TRUE;
             }
         }
@@ -192,15 +255,39 @@ class Proxy_chk_cmd_cls extends CDS_cmd_cls {
             ;
         }
 
-        $cmd->ctx->proxy_chk_postprocess($cmd->user_idx, $cmd->user_sess, $cmd->conn_ip, $cmd->is_auth, $is_proxy);
+        proxy_chk_postprocess($cmd->ctx, $cmd->user_idx, $cmd->user_sess, $cmd->conn_ip, $cmd->is_auth, $is_proxy);
 
         return TRUE;
     }
 
     function timeout($cmd)
     {
-        printf("'proxy_chk' timeout function reached\n");
+        proxy_chk_timeout_cb($cmd->ctx, $cmd->user_idx, $cmd->user_sess, $cmd->conn_ip, $cmd->is_auth);
     }
+}
+
+function tor_chk_postprocess($brisk, $user_idx, $user_sess, $conn_ip, $is_auth, $is_tor)
+{
+    log_cds(sprintf("tor: user_idx: %d, user_sess: %s, conn_ip: %s, is_auth: %s, is_tor: %s",
+                    $user_idx, $user_sess, $conn_ip, ($is_auth ? "YES" : "NO"), ($is_tor ? "YES" : "NO")));
+}
+
+function tor_chk_timeout_cb($brisk, $user_idx, $user_sess, $conn_ip, $is_auth)
+{
+    log_cds(sprintf("tor: user_idx: %d, user_sess: %s, conn_ip: %s, is_auth: %s",
+                    $user_idx, $user_sess, $conn_ip, ($is_auth ? "YES" : "NO")));
+}
+
+function proxy_chk_postprocess($brisk, $user_idx, $user_sess, $conn_ip, $is_auth, $is_proxy)
+{
+    log_cds(sprintf("proxy: user_idx: %d, user_sess: %s, conn_ip: %s, is_auth: %s, is_proxy: %s",
+                    $user_idx, $user_sess, $conn_ip, ($is_auth ? "YES" : "NO"), ($is_proxy ? "YES" : "NO")));
+}
+
+function proxy_chk_timeout_cb($brisk, $user_idx, $user_sess, $conn_ip, $is_auth)
+{
+    log_cds(sprintf("proxy timeout: user_idx: %d, user_sess: %s, conn_ip: %s, is_auth: %s",
+                    $user_idx, $user_sess, $conn_ip, ($is_auth ? "YES" : "NO")));
 }
 
 ?>
