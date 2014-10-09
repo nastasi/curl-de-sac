@@ -190,7 +190,7 @@ class Proxy_chk_cmd_cls extends CDS_cmd_cls {
 
         foreach($this->scan_headers as $key){
             //proxy detected? lets log...
-            if($headers[$key]) {
+            if(array_key_exists($key, $headers)) {
                 // we already are behind a PROXY, this are our headers
                 if ($key == 'X-Proxy-ID') {
                     if ($headers[$key] == '860705422')
