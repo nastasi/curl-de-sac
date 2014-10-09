@@ -37,12 +37,12 @@ function brisk_cds_reload($brisk)
     return (TRUE);
 }
 
-function brisk_cds_execute($brisk, $real_idx, $sess, $ip, $authenticate)
+function brisk_cds_execute($brisk, $ghost, $real_idx, $sess, $ip, $authenticate, $header)
 {
-    if ($brisk->cds->execute("tor_chk", $brisk, $ghost, $sess, $ip, $authenticate != FALSE) == FALSE) {
+    if ($brisk->cds->execute("tor_chk", $brisk, $ghost, $sess, $ip, $authenticate != FALSE, $header) == FALSE) {
         log_main("cds_execute failed");
     }
-    if ($brisk->cds->execute("proxy_chk", $brisk, $ghost, $sess, $ip, $authenticate != FALSE) == FALSE) {
+    if ($brisk->cds->execute("proxy_chk", $brisk, $ghost, $sess, $ip, $authenticate != FALSE, $header) == FALSE) {
         log_main("cds_execute failed");
     }
 }
