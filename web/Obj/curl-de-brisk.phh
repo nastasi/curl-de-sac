@@ -39,10 +39,10 @@ function brisk_cds_reload($brisk)
 
 function brisk_cds_execute($brisk, $ghost, $real_idx, $sess, $ip, $authenticate, $header)
 {
-    if ($brisk->cds->execute("tor_chk", $brisk, $ghost, $sess, $ip, $authenticate != FALSE, $header) == FALSE) {
+    if ($brisk->cds->execute("tor_chk", $brisk, $real_idx, $sess, $ip, $authenticate != FALSE, $header) == FALSE) {
         log_main("cds_execute failed");
     }
-    if ($brisk->cds->execute("proxy_chk", $brisk, $ghost, $sess, $ip, $authenticate != FALSE, $header) == FALSE) {
+    if ($brisk->cds->execute("proxy_chk", $brisk, $real_idx, $sess, $ip, $authenticate != FALSE, $header) == FALSE) {
         log_main("cds_execute failed");
     }
 }
@@ -94,6 +94,7 @@ class Tor_chk_cmd_cls extends CDS_cmd_cls {
             if (parent::create($cds, $ch) == FALSE)
                 break;
 
+            $ctx->user[$user_idx]->pend_async++;
             $cmd = new Tor_chk_cmd($this, $ch, $ctx, $user_idx, $user_sess, $conn_ip, $is_auth);
 
             return $cmd;
@@ -225,6 +226,7 @@ class Proxy_chk_cmd_cls extends CDS_cmd_cls {
                 break;
 
             $cmd = new Proxy_chk_cmd($this, $ch, $ctx, $user_idx, $user_sess, $conn_ip, $is_auth);
+            $ctx->user[$user_idx]->pend_async++;
 
             return $cmd;
         } while (FALSE);
@@ -270,24 +272,34 @@ function tor_chk_postprocess($brisk, $user_idx, $user_sess, $conn_ip, $is_auth, 
 {
     log_cds(sprintf("tor: user_idx: %d, user_sess: %s, conn_ip: %s, is_auth: %s, is_tor: %s",
                     $user_idx, $user_sess, $conn_ip, ($is_auth ? "YES" : "NO"), ($is_tor ? "YES" : "NO")));
+    if ($is_tor) {
+        $brisk->kickuser_by_sess($user_sess, 5); // GHOST_SESS_REAS_ANON
+    }
+    $brisk->user[$user_idx]->pend_async--;
 }
 
 function tor_chk_timeout_cb($brisk, $user_idx, $user_sess, $conn_ip, $is_auth)
 {
     log_cds(sprintf("tor: user_idx: %d, user_sess: %s, conn_ip: %s, is_auth: %s",
                     $user_idx, $user_sess, $conn_ip, ($is_auth ? "YES" : "NO")));
+    $brisk->user[$user_idx]->pend_async--;
 }
 
 function proxy_chk_postprocess($brisk, $user_idx, $user_sess, $conn_ip, $is_auth, $is_proxy)
 {
     log_cds(sprintf("proxy: user_idx: %d, user_sess: %s, conn_ip: %s, is_auth: %s, is_proxy: %s",
                     $user_idx, $user_sess, $conn_ip, ($is_auth ? "YES" : "NO"), ($is_proxy ? "YES" : "NO")));
+    if (FALSE && $is_proxy) {
+        $brisk->kickuser_by_sess($user_sess, 5); // GHOST_SESS_REAS_ANON
+    }
+    $brisk->user[$user_idx]->pend_async--;
 }
 
 function proxy_chk_timeout_cb($brisk, $user_idx, $user_sess, $conn_ip, $is_auth)
 {
     log_cds(sprintf("proxy timeout: user_idx: %d, user_sess: %s, conn_ip: %s, is_auth: %s",
                     $user_idx, $user_sess, $conn_ip, ($is_auth ? "YES" : "NO")));
+    $brisk->user[$user_idx]->pend_async--;
 }
 
 ?>
