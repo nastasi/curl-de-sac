@@ -23,12 +23,12 @@ function brisk_cds_reload($brisk)
     $proxy_chk_cls = new Proxy_chk_cmd_cls();
 
     // registrer tor_chk_cls and proxy_chk_cls
-    printf("MAIN: Register 'tor_chk_cls'\n");
+    fprintf(STDERR, "MAIN: Register 'tor_chk_cls'\n");
     if (($brisk->cds->cmd_cls_register($tor_chk_cls)) == FALSE) {
         fprintf(STDERR, "MAIN: 'tor_chk_cls' registration failed\n");
         return (FALSE);
     }
-    printf("MAIN: Register 'proxy_chk_cls'\n");
+    fprintf(STDERR, "MAIN: Register 'proxy_chk_cls'\n");
     if (($brisk->cds->cmd_cls_register($proxy_chk_cls)) == FALSE) {
         fprintf(STDERR, "MAIN: 'proxy_chk_cls' registration failed\n");
         return (FALSE);
@@ -77,7 +77,7 @@ class Tor_chk_cmd_cls extends CDS_cmd_cls {
     function create($cds, $ctx, $user_idx, $user_sess, $conn_ip, $is_auth)
     {
         if ($cds->dbg_get() > 0) {
-            printf("'tor_chk'::create url:[%s]\n", 'TOR_CHK_URL');
+            fprintf(STDERR, "'tor_chk'::create url:[%s]\n", 'TOR_CHK_URL');
         }
 
         do {
@@ -106,27 +106,27 @@ class Tor_chk_cmd_cls extends CDS_cmd_cls {
     function process($cmd, $ret)
     {
         if ($this->dbg_get() > 2) {
-            printf("CURL: 'tor_chk' process: curl_multi_getcontent\n");
-            print_r($ret);
+            fprintf(STDERR, "CURL: 'tor_chk' process: curl_multi_getcontent\n");
+            fprintf(STDERR, "%s", print_r($ret, TRUE));
         }
 
         $content = curl_multi_getcontent($cmd->ch_get());
-        if ($this->dbg_get() > 0) { printf("'tor_chk' process: [%s]\n", $content); }
+        if ($this->dbg_get() > 0) { fprintf(STDERR, "'tor_chk' process: [%s]\n", $content); }
 
         $is_tor = FALSE;
         if (mb_strpos($content,
                        "The IP Address you entered matches one or more active Tor servers",
                        0, "UTF-8") !== FALSE) {
-            // printf("WARNING: stripos ok\n");
+            // fprintf(STDERR, "WARNING: stripos ok\n");
             $is_tor = TRUE;
         }
         else if (mb_strpos($content,
                        "The IP Address you entered is NOT an active Tor server",
                             0, "UTF-8") === FALSE) {
-            printf("WARNING: tor check disabled\n");
+            fprintf(STDERR, "WARNING: tor check disabled\n");
         }
         else {
-            // printf("WARNING: NOT an active Tor server on IP [%s]\n", $cmd->conn_ip);
+            // fprintf(STDERR, "WARNING: NOT an active Tor server on IP [%s]\n", $cmd->conn_ip);
             ;
         }
 
@@ -224,23 +224,23 @@ class Proxy_chk_cmd_cls extends CDS_cmd_cls {
     function process($cmd, $ret)
     {
         if ($this->dbg_get() > 2) {
-            printf("CURL: 'proxy_chk' process: curl_multi_getcontent\n");
-            print_r($ret);
+            fprintf(STDERR, "CURL: 'proxy_chk' process: curl_multi_getcontent\n");
+            fprintf(STDERR, "%s", print_r($ret, TRUE));
         }
 
         $content = curl_multi_getcontent($cmd->ch_get());
-        if ($this->dbg_get() > 0) { printf("'proxy_chk' process: [%s]\n", $content); }
+        if ($this->dbg_get() > 0) { fprintf(STDERR, "'proxy_chk' process: [%s]\n", $content); }
 
         $is_proxy = FALSE;
         if (mb_strpos($content, "is_proxy=true", 0, "UTF-8") !== FALSE) {
-            // printf("WARNING: stripos ok\n");
+            // fprintf(STDERR, "WARNING: stripos ok\n");
             $is_proxy = TRUE;
         }
         else if (mb_strpos($content, "is_proxy=false", 0, "UTF-8") === FALSE) {
-            printf("WARNING: proxy check disabled\n");
+            fprintf(STDERR, "WARNING: proxy check disabled\n");
         }
         else {
-            // printf("WARNING: NOT an active Proxy server on IP [%s]\n", $cmd->conn_ip);
+            // fprintf(STDERR, "WARNING: NOT an active Proxy server on IP [%s]\n", $cmd->conn_ip);
             ;
         }
 
