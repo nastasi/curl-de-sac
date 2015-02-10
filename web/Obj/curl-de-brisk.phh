@@ -186,26 +186,13 @@ class Proxy_chk_cmd_cls extends CDS_cmd_cls {
     function create($cds, $ctx, $user_idx, $user_sess, $conn_ip, $is_auth, $headers)
     {
         if ($cds->dbg_get() > 0) {
-            printf("'proxy_chk'::create url:[%s]\n", 'PROXY_CHK_URL');
+            fprintf(STDERR, "'proxy_chk'::create url:[%s]\n", 'PROXY_CHK_URL');
         }
 
         foreach($this->scan_headers as $key){
             //proxy detected? lets log...
             if(array_key_exists($key, $headers)) {
                 // we already are behind a PROXY, this are our headers
-                if ($key == 'X-Proxy-ID') {
-                    if ($headers[$key] == '860705422')
-                        continue;
-                }
-                else if ($key == 'X-Forwarded-For') {
-                    if ($headers[$key] == '172.16.9.66')
-                        continue;
-                }
-                else if ($key == 'Via') {
-                    if ($headers[$key] == '1.1 172.16.8.1 (Mikrotik HttpProxy)')
-                        continue;
-                }
-
                 proxy_chk_postprocess($ctx, $user_idx, $user_sess, $conn_ip, $is_auth, TRUE);
                 return TRUE;
             }
