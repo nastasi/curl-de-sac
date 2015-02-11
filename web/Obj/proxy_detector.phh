@@ -1,0 +1,74 @@
+<?php
+/*
+ *	Proxy Detector v0.1 with curl-de-sac customizations
+ *		copyrights by: Daantje Eeltink (me@daantje.nl)
+ *						http://www.daantje.nl
+ *
+ *		first build: Mon Sep 18 21:43:48 CEST 2006
+ *		last build: Tue Sep 19 10:37:12 CEST 2006
+ *
+ *	Description:
+ *		This class can detect if a visitor uses a proxy server by scanning the
+ *		headers returned by the user client. When the user uses a proxy server,
+ *		most of the proxy servers alter the header. The header is returned to
+ *		PHP in the array $_SERVER.
+ *
+ *	License:
+ *		GPL v2 licence. (http://www.gnu.org/copyleft/gpl.txt)
+ */
+
+class ProxyDetector {
+    
+    /**
+     * CONSTRUCTOR
+     *	Set defaults...
+     */
+    function ProxyDetector(){
+    }
+    
+    /*
+      function exists_in_rbl($remote)
+      verify if an host is into a proxy black list or not
+    */
+    function exists_in_rbl($remote) {
+        $rbls = array('http.dnsbl.sorbs.net', 'misc.dnsbl.sorbs.net');
+        
+        if (preg_match("/([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)/",
+                       $remote, $matches)) {
+            foreach ($rbls as $rbl) {
+                $rblhost = $matches[4] . "." . $matches[3] . "." .
+                    $matches[2] . "." . $matches[1] . "." . $rbl;
+                
+                $resolved = gethostbyname($rblhost);
+                // echo "RBL ".$rblhost."<br>";
+                if ($resolved != $rblhost) {
+                    return TRUE;
+                }
+            }
+        }
+        return FALSE;
+    }
+    
+    /**
+     * BOOL $proxy = detect( $addr )
+     *	Start detection and return TRUE if a proxy server is detected...
+     */
+    function detect($addr){
+        if ($this->exists_in_rbl($addr) == TRUE)
+            return (TRUE);
+
+        //nope, no proxy was logged...
+        return FALSE;
+    }
+}
+
+//init class
+function is_proxy($addr)
+{
+    $proxy = new ProxyDetector();
+    
+    //start detect
+    return ($proxy->detect($addr));
+}
+
+?>
