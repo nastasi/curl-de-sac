@@ -185,8 +185,22 @@ class Proxy_chk_cmd_cls extends CDS_cmd_cls {
 
     function create($cds, $ctx, $user_idx, $user_sess, $conn_ip, $is_auth, $headers)
     {
+        GLOBAL $G_proxy_white_list;
+
         if ($cds->dbg_get() > 0) {
             fprintf(STDERR, "'proxy_chk'::create url:[%s]\n", 'PROXY_CHK_URL');
+        }
+
+        if ($is_auth) {
+            proxy_chk_postprocess($ctx, $user_idx, $user_sess, $conn_ip, $is_auth, FALSE);
+            return FALSE;
+        }
+
+        foreach($G_proxy_white_list as $authproxy) {
+            if ($conn_ip == $authproxy) {
+                proxy_chk_postprocess($ctx, $user_idx, $user_sess, $conn_ip, $is_auth, FALSE);
+                return (FALSE);
+            }
         }
 
         foreach($this->scan_headers as $key){
@@ -276,7 +290,7 @@ function proxy_chk_postprocess($brisk, $user_idx, $user_sess, $conn_ip, $is_auth
 {
     log_cds(sprintf("proxy: user_idx: %d, user_sess: %s, conn_ip: %s, is_auth: %s, is_proxy: %s",
                     $user_idx, $user_sess, $conn_ip, ($is_auth ? "YES" : "NO"), ($is_proxy ? "YES" : "NO")));
-    if (!$brisk->user[$user_idx]->is_auth() && $is_proxy) {
+    if ($is_proxy) {
         $brisk->kickuser_by_sess($user_sess, 6); // GHOST_SESS_REAS_PROX
     }
     $brisk->user[$user_idx]->pend_async--;
