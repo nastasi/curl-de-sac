@@ -1,0 +1,10 @@
+brisk_cds_execute
+  cds->execute("tor_chk",
+  cds->execute("proxy_chk",
+
+  ($cmd_cls = $this->cmd_cls[$name];)
+
+  Tor_chk_cmd_cls->create
+
+  Proxy_chk_cmd_cls->create
+     (if header filled, return TRUE and call postprocess func)
