@@ -9,3 +9,5 @@ DONE - add parameter to set WEB_URL and DBG_LEVEL defines
 DONE - debugging system
 DONE - timeout handling
 DONE - remove cmd from list when accomplished
+
+LINE ADDED TO CHECK LP SELF SYNC
